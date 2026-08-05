@@ -25,5 +25,24 @@ Route::middleware(['auth', 'email.verified'])->group(function () {
     Route::get('/admin/kantors', fn() => view('dashboard'))->name('admin.kantors.index');
     Route::get('/admin/jabatans', fn() => view('dashboard'))->name('admin.jabatans.index');
     Route::get('/admin/audit-logs', fn() => view('dashboard'))->name('admin.audit-logs.index');
-    Route::get('/profile', fn() => view('dashboard'))->name('profile.edit');
+
+
+    //profile user
+    Route::get('/profile', [App\Http\Controllers\ProfileController::class, 'edit'])
+        ->name('profile.edit');
+    Route::put('/profile', [App\Http\Controllers\ProfileController::class, 'update'])
+        ->name('profile.update');
+    Route::put('/profile/password', [App\Http\Controllers\ProfileController::class, 'updatePassword'])
+        ->name('profile.password');
+    Route::post('/profile/signature/upload', [App\Http\Controllers\ProfileController::class, 'uploadSignature'])
+        ->name('profile.signature.upload');
+    Route::post('/profile/signature/canvas', [App\Http\Controllers\ProfileController::class, 'saveSignatureCanvas'])
+        ->name('profile.signature.canvas');
+    Route::delete('/profile/signature', [App\Http\Controllers\ProfileController::class, 'deleteSignature'])
+        ->name('profile.signature.delete');
+    Route::get('/signature/{user}', [App\Http\Controllers\ProfileController::class, 'showSignature'])
+        ->name('signature.show');
+    //tanda tangan
+    Route::get('/signature/{user}', [App\Http\Controllers\ProfileController::class, 'showSignature'])
+        ->name('signature.show');
 });
