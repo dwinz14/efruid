@@ -7,4 +7,30 @@ window.Alpine = Alpine;
 
 Alpine.data("typewriter", typewriter);
 
+Alpine.data('permohonanForm', (config = {}) => ({
+    jenis: config.jenis ?? 'pendaftaran',
+    tipePerubahan: config.tipePerubahan ?? '',
+    formType: config.formType ?? 'normal',
+    draftUrl: config.draftUrl ?? '/permohonan/draft',
+
+    get isPerubahan() {
+        return this.jenis === 'perubahan';
+    },
+    get isNonaktif() {
+        return this.jenis === 'nonaktif';
+    },
+    get isPermanen() {
+        return this.jenis === 'perubahan' && this.tipePerubahan === 'permanen';
+    },
+    get isSementara() {
+        return this.jenis === 'perubahan' && this.tipePerubahan === 'sementara';
+    },
+
+    submitDraft() {
+        const form = document.getElementById('formStep2');
+        form.action = this.draftUrl;
+        form.submit();
+    }
+}));
+
 Alpine.start();

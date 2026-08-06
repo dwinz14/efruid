@@ -17,7 +17,6 @@ require __DIR__ . '/auth.php';
 
 // Route placeholders agar sidebar tidak error saat build layout
 Route::middleware(['auth', 'email.verified'])->group(function () {
-    Route::get('/permohonan', fn() => view('dashboard'))->name('permohonan.index');
     Route::get('/approval/atasan', fn() => view('dashboard'))->name('approval.atasan.index');
     Route::get('/approval/dirut', fn() => view('dashboard'))->name('approval.dirut.index');
     Route::get('/eksekusi', fn() => view('dashboard'))->name('eksekusi.index');
@@ -26,6 +25,27 @@ Route::middleware(['auth', 'email.verified'])->group(function () {
     Route::get('/admin/jabatans', fn() => view('dashboard'))->name('admin.jabatans.index');
     Route::get('/admin/audit-logs', fn() => view('dashboard'))->name('admin.audit-logs.index');
 
+    // Permohonan
+    Route::get('/permohonan', [App\Http\Controllers\PermohonanController::class, 'index'])
+        ->name('permohonan.index');
+    Route::get('/permohonan/buat', [App\Http\Controllers\PermohonanController::class, 'create'])
+        ->name('permohonan.create');
+    Route::get('/permohonan/buat/step-2', [App\Http\Controllers\PermohonanController::class, 'createStep2'])
+        ->name('permohonan.step2');
+    Route::post('/permohonan/buat/step-3', [App\Http\Controllers\PermohonanController::class, 'createStep3'])
+        ->name('permohonan.step3');
+    Route::post('/permohonan/submit', [App\Http\Controllers\PermohonanController::class, 'submit'])
+        ->name('permohonan.submit');
+    Route::post('/permohonan/draft', [App\Http\Controllers\PermohonanController::class, 'saveDraft'])
+        ->name('permohonan.draft');
+    Route::get('/permohonan/{permohonan}', [App\Http\Controllers\PermohonanController::class, 'show'])
+        ->name('permohonan.show');
+    Route::get('/permohonan/{permohonan}/edit', [App\Http\Controllers\PermohonanController::class, 'edit'])
+        ->name('permohonan.edit');
+    Route::post('/permohonan/{permohonan}/cancel', [App\Http\Controllers\PermohonanController::class, 'cancel'])
+        ->name('permohonan.cancel');
+    Route::get('/permohonan/{permohonan}/pdf', [App\Http\Controllers\PermohonanController::class, 'downloadPdf'])
+        ->name('permohonan.pdf');
 
     //profile user
     Route::get('/profile', [App\Http\Controllers\ProfileController::class, 'edit'])
@@ -40,8 +60,6 @@ Route::middleware(['auth', 'email.verified'])->group(function () {
         ->name('profile.signature.canvas');
     Route::delete('/profile/signature', [App\Http\Controllers\ProfileController::class, 'deleteSignature'])
         ->name('profile.signature.delete');
-    Route::get('/signature/{user}', [App\Http\Controllers\ProfileController::class, 'showSignature'])
-        ->name('signature.show');
     //tanda tangan
     Route::get('/signature/{user}', [App\Http\Controllers\ProfileController::class, 'showSignature'])
         ->name('signature.show');
