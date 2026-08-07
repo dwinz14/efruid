@@ -173,6 +173,46 @@
     .toast-warning {
         @apply toast bg-yellow-50 border-yellow-200 text-yellow-800;
     }
+
+    /* Approval action card */
+    .approval-action-card {
+        @apply border-2 rounded-xl p-4 transition-all cursor-pointer;
+    }
+    .approval-action-approve {
+        @apply border-green-200 bg-green-50 hover:border-green-400;
+    }
+    .approval-action-reject {
+        @apply border-red-200 bg-red-50 hover:border-red-400;
+    }
+
+    /* Status timeline dot */
+    .timeline-dot-done {
+        @apply w-3 h-3 rounded-full bg-brand-500 flex-shrink-0;
+    }
+    .timeline-dot-pending {
+        @apply w-3 h-3 rounded-full bg-slate-300 flex-shrink-0;
+    }
+    .timeline-dot-reject {
+        @apply w-3 h-3 rounded-full bg-red-400 flex-shrink-0;
+    }
+
+    /* Approval decision buttons */
+    .approval-btn-choice {
+        @apply flex items-center justify-center gap-2 p-4 border-2 rounded-xl
+           transition-all font-medium text-sm;
+    }
+    .approval-btn-approve {
+        @apply border-slate-200 text-slate-600 hover:border-green-300 hover:bg-green-50;
+    }
+    .approval-btn-approve-active {
+        @apply border-green-500 bg-green-50 text-green-700;
+    }
+    .approval-btn-reject {
+        @apply border-slate-200 text-slate-600 hover:border-red-300 hover:bg-red-50;
+    }
+    .approval-btn-reject-active {
+        @apply border-red-500 bg-red-50 text-red-700;
+    }
 }
 
 /* ── Auth page helpers ── */

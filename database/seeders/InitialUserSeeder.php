@@ -17,23 +17,81 @@ class InitialUserSeeder extends Seeder
         $kantorPusat = Kantor::where('is_pusat', true)->firstOrFail();
         $jabatanDirut = Jabatan::where('nama', 'DIREKTUR UTAMA')->firstOrFail();
 
-        // ── GANTI: isi data Super Admin sesuai kebutuhan sebelum deploy ──
-        $superAdmin = User::updateOrCreate(
-            ['email' => 'super@admin.com'], // GANTI
+        // Gunakan jabatan default selain Dirut untuk user biasa
+        $jabatanDefault = Jabatan::where('nama', '!=', 'DIREKTUR UTAMA')->first()
+            ?? $jabatanDirut;
+
+        $users = [
             [
-                'name'           => 'SUPER ADMIN',           // GANTI
-                'nik'            => 'AP000000000',            // GANTI: format AP + 9 digit
-                'password'       => Hash::make('superadmin123'), // GANTI
-                'kantor_id'      => $kantorPusat->id,
-                'jabatan_id'     => $jabatanDirut->id,
-                'is_active'      => true,
-                'email_verified' => true,
-            ]
+                'role' => RoleUser::SUPER_ADMIN,
+                'email' => 'super@admin.com',
+                'name' => 'SUPER ADMIN',
+                'nik' => 'AP000000001',
+                'password' => 'superadmin123',
+                'jabatan_id' => $jabatanDirut->id,
+            ],
+            [
+                'role' => RoleUser::PEMOHON,
+                'email' => 'pemohon@example.com',
+                'name' => 'USER PEMOHON',
+                'nik' => 'AP000000002',
+                'password' => 'password123',
+                'jabatan_id' => $jabatanDefault->id,
+            ],
+            [
+                'role' => RoleUser::ATASAN,
+                'email' => 'atasan@example.com',
+                'name' => 'USER ATASAN',
+                'nik' => 'AP000000003',
+                'password' => 'password123',
+                'jabatan_id' => $jabatanDefault->id,
+            ],
+            [
+                'role' => RoleUser::DIRUT,
+                'email' => 'dirut@example.com',
+                'name' => 'DIREKTUR UTAMA',
+                'nik' => 'AP000000004',
+                'password' => 'password123',
+                'jabatan_id' => $jabatanDirut->id,
+            ],
+            [
+                'role' => RoleUser::IT_STAFF,
+                'email' => 'itstaff@example.com',
+                'name' => 'STAFF IT',
+                'nik' => 'AP000000005',
+                'password' => 'password123',
+                'jabatan_id' => $jabatanDefault->id,
+            ],
+        ];
+
+        foreach ($users as $data) {
+            $user = User::updateOrCreate(
+                ['email' => $data['email']],
+                [
+                    'name' => $data['name'],
+                    'nik' => $data['nik'],
+                    'password' => Hash::make($data['password']),
+                    'kantor_id' => $kantorPusat->id,
+                    'jabatan_id' => $data['jabatan_id'],
+                    'is_active' => true,
+                    'email_verified' => true,
+                ]
+            );
+
+            $role = Role::where('name', $data['role']->value)->firstOrFail();
+
+            $user->roles()->sync([$role->id]);
+        }
+
+        $this->command->table(
+            ['Role', 'Email', 'Password'],
+            collect($users)->map(fn($u) => [
+                $u['role']->label(),
+                $u['email'],
+                $u['password'],
+            ])
         );
 
-        $superAdminRole = Role::where('name', RoleUser::SUPER_ADMIN->value)->firstOrFail();
-        $superAdmin->roles()->syncWithoutDetaching([$superAdminRole->id]);
-
-        $this->command->info('✓ Super Admin seeder selesai. Harap ganti kredensial di InitialUserSeeder.php sebelum deploy!');
+        $this->command->info('✓ Initial user seeder berhasil dijalankan.');
     }
 }
