@@ -43,7 +43,22 @@
                 </div>
                 <div class="card-body p-0 overflow-x-auto">
                     {{-- Template dokumen FRUID --}}
-                    @include('permohonan.partials.document-preview', ['p' => $permohonan])
+                    <div class="card">
+                        <div class="card-header flex items-center justify-between">
+                            <h2 class="text-sm font-semibold text-slate-800">Preview Dokumen</h2>
+                            <div class="flex gap-2">
+                                @if ($permohonan->form_type->value === 'rangkap')
+                                    <span class="badge bg-amber-100 text-amber-700">Rangkap Jabatan</span>
+                                @else
+                                    <span class="badge bg-brand-100 text-brand-700">Tidak Rangkap Jabatan</span>
+                                @endif
+                            </div>
+                        </div>
+                        <div class="overflow-hidden rounded-b-card" style="height: 700px;">
+                            <iframe src="{{ route('dokumen.preview', $permohonan) }}"
+                                style="width:100%;height:100%;border:none;" title="Preview Dokumen FRUID"></iframe>
+                        </div>
+                    </div>
                 </div>
             </div>
 

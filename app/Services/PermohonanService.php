@@ -90,17 +90,19 @@ class PermohonanService
     {
         $nomorDokumen = $this->generateNomorDokumen($permohonan);
 
-        // Snapshot data pemohon saat submit (bisa saja berubah sejak draft)
+        // Copy snapshot TTD pemohon jika ada
+        $ttdPemohonPath = null;
+        if ($pemohon->signature_path && Storage::exists($pemohon->signature_path)) {
+            $ttdPemohonPath = $this->copySignatureSnapshot($pemohon, $permohonan->id, 'pemohon');
+        }
+
         $permohonan->update([
-            'status' => StatusPermohonan::PENDING_ATASAN,
-            'nomor_dokumen' => $nomorDokumen,
-            'nama_pemohon' => $pemohon->name,
-            'jabatan_pemohon' => $pemohon->jabatan_label,
-            'nik_pemohon' => $pemohon->nik,
-            // Snapshot TTD pemohon jika sudah ada
-            'ttd_pemohon_path' => $pemohon->signature_path
-                ? $this->copySignatureSnapshot($pemohon, $permohonan->id, 'pemohon')
-                : null,
+            'status'           => StatusPermohonan::PENDING_ATASAN,
+            'nomor_dokumen'    => $nomorDokumen,
+            'nama_pemohon'     => $pemohon->name,
+            'jabatan_pemohon'  => $pemohon->jabatan_label,
+            'nik_pemohon'      => $pemohon->nik,
+            'ttd_pemohon_path' => $ttdPemohonPath,
         ]);
 
         AuditService::log(
@@ -112,9 +114,6 @@ class PermohonanService
             $nomorDokumen,
         );
 
-        // Generate dokumen PDF final setelah data disubmit
-        $this->generatePdf($permohonan->fresh());
-
         return $permohonan->fresh();
     }
 
@@ -124,7 +123,7 @@ class PermohonanService
     {
         $permohonan->load('kantor', 'atasan', 'pemohon');
 
-        $pdf = Pdf::loadView('permohonan.partials.document-preview-pdf', ['p' => $permohonan])
+        $pdf = Pdf::loadView('permohonan.partials.document-preview', ['p' => $permohonan])
             ->setPaper('A4', 'portrait');
 
         $path = "pdf/permohonan/{$permohonan->id}.pdf";

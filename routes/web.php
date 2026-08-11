@@ -18,35 +18,10 @@ require __DIR__ . '/auth.php';
 // Route placeholders agar sidebar tidak error saat build layout
 Route::middleware(['auth', 'email.verified'])->group(function () {
 
-    Route::get('/eksekusi', fn() => view('dashboard'))->name('eksekusi.index');
     Route::get('/admin/users', fn() => view('dashboard'))->name('admin.users.index');
     Route::get('/admin/kantors', fn() => view('dashboard'))->name('admin.kantors.index');
     Route::get('/admin/jabatans', fn() => view('dashboard'))->name('admin.jabatans.index');
     Route::get('/admin/audit-logs', fn() => view('dashboard'))->name('admin.audit-logs.index');
-
-    // Approval Atasan
-    Route::middleware('role:atasan')->group(function () {
-        Route::get('/approval/atasan', [App\Http\Controllers\ApprovalController::class, 'atasanIndex'])
-            ->name('approval.atasan.index');
-        Route::get('/approval/atasan/{permohonan}', [App\Http\Controllers\ApprovalController::class, 'atasanShow'])
-            ->name('approval.atasan.show');
-        Route::post('/approval/atasan/{permohonan}/approve', [App\Http\Controllers\ApprovalController::class, 'atasanApprove'])
-            ->name('approval.atasan.approve');
-        Route::post('/approval/atasan/{permohonan}/reject', [App\Http\Controllers\ApprovalController::class, 'atasanReject'])
-            ->name('approval.atasan.reject');
-    });
-
-    // Approval Dirut
-    Route::middleware('role:dirut')->group(function () {
-        Route::get('/approval/dirut', [App\Http\Controllers\ApprovalController::class, 'dirutIndex'])
-            ->name('approval.dirut.index');
-        Route::get('/approval/dirut/{permohonan}', [App\Http\Controllers\ApprovalController::class, 'dirutShow'])
-            ->name('approval.dirut.show');
-        Route::post('/approval/dirut/{permohonan}/approve', [App\Http\Controllers\ApprovalController::class, 'dirutApprove'])
-            ->name('approval.dirut.approve');
-        Route::post('/approval/dirut/{permohonan}/reject', [App\Http\Controllers\ApprovalController::class, 'dirutReject'])
-            ->name('approval.dirut.reject');
-    });
 
     // Permohonan
     Route::get('/permohonan', [App\Http\Controllers\PermohonanController::class, 'index'])
@@ -67,10 +42,10 @@ Route::middleware(['auth', 'email.verified'])->group(function () {
         ->name('permohonan.edit');
     Route::post('/permohonan/{permohonan}/cancel', [App\Http\Controllers\PermohonanController::class, 'cancel'])
         ->name('permohonan.cancel');
-    Route::get('/permohonan/{permohonan}/pdf', [App\Http\Controllers\PermohonanController::class, 'downloadPdf'])
+    Route::get('/permohonan/{permohonan}/pdf', [App\Http\Controllers\EksekusiController::class, 'downloadPdf'])
         ->name('permohonan.pdf');
-    Route::post('/permohonan/{permohonan}/revise', [App\Http\Controllers\ApprovalController::class, 'revise'])
-        ->name('permohonan.revise');
+    Route::get('/dokumen/{permohonan}/preview', [App\Http\Controllers\DokumenController::class, 'preview'])
+        ->name('dokumen.preview');
 
     //profile user
     Route::get('/profile', [App\Http\Controllers\ProfileController::class, 'edit'])
@@ -85,7 +60,61 @@ Route::middleware(['auth', 'email.verified'])->group(function () {
         ->name('profile.signature.canvas');
     Route::delete('/profile/signature', [App\Http\Controllers\ProfileController::class, 'deleteSignature'])
         ->name('profile.signature.delete');
+
     //tanda tangan
     Route::get('/signature/{user}', [App\Http\Controllers\ProfileController::class, 'showSignature'])
         ->name('signature.show');
+
+    Route::get('/file/signature', function (Illuminate\Http\Request $request) {
+        $path = base64_decode($request->query('path', ''));
+
+        // Validasi: hanya boleh akses file di folder signatures/
+        if (! str_starts_with($path, 'signatures/')) {
+            abort(403);
+        }
+
+        if (! \Illuminate\Support\Facades\Storage::exists($path)) {
+            abort(404);
+        }
+
+        return response(
+            \Illuminate\Support\Facades\Storage::get($path),
+            200,
+            ['Content-Type' => 'image/png', 'Cache-Control' => 'private, max-age=3600']
+        );
+    })->name('signature.file');
+});
+
+// Approval Atasan
+Route::middleware('role:atasan')->group(function () {
+    Route::get('/approval/atasan', [App\Http\Controllers\ApprovalController::class, 'atasanIndex'])
+        ->name('approval.atasan.index');
+    Route::get('/approval/atasan/{permohonan}', [App\Http\Controllers\ApprovalController::class, 'atasanShow'])
+        ->name('approval.atasan.show');
+    Route::post('/approval/atasan/{permohonan}/approve', [App\Http\Controllers\ApprovalController::class, 'atasanApprove'])
+        ->name('approval.atasan.approve');
+    Route::post('/approval/atasan/{permohonan}/reject', [App\Http\Controllers\ApprovalController::class, 'atasanReject'])
+        ->name('approval.atasan.reject');
+});
+
+// Approval Dirut
+Route::middleware('role:dirut')->group(function () {
+    Route::get('/approval/dirut', [App\Http\Controllers\ApprovalController::class, 'dirutIndex'])
+        ->name('approval.dirut.index');
+    Route::get('/approval/dirut/{permohonan}', [App\Http\Controllers\ApprovalController::class, 'dirutShow'])
+        ->name('approval.dirut.show');
+    Route::post('/approval/dirut/{permohonan}/approve', [App\Http\Controllers\ApprovalController::class, 'dirutApprove'])
+        ->name('approval.dirut.approve');
+    Route::post('/approval/dirut/{permohonan}/reject', [App\Http\Controllers\ApprovalController::class, 'dirutReject'])
+        ->name('approval.dirut.reject');
+});
+
+//IT eksekusi FRUID
+Route::middleware(['auth', 'email.verified', 'role:it_staff'])->group(function () {
+    Route::get('/eksekusi', [App\Http\Controllers\EksekusiController::class, 'index'])
+        ->name('eksekusi.index');
+    Route::get('/eksekusi/{permohonan}', [App\Http\Controllers\EksekusiController::class, 'show'])
+        ->name('eksekusi.show');
+    Route::post('/eksekusi/{permohonan}/execute', [App\Http\Controllers\EksekusiController::class, 'execute'])
+        ->name('eksekusi.execute');
 });

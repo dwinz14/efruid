@@ -61,9 +61,16 @@
                     </form>
                 @endif
                 @if ($permohonan->pdf_path)
-                    <a href="{{ route('permohonan.pdf', $permohonan) }}" class="btn-secondary btn-sm" target="_blank">
+                    <a href="{{ route('permohonan.pdf', $permohonan) }}" target="_blank" class="btn-secondary btn-sm">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0
+                                 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19
+                                 a2 2 0 01-2 2z" />
+                        </svg>
                         Download PDF
                     </a>
+                @elseif($permohonan->status->value === 'EXECUTED')
+                    <span class="text-xs text-slate-400 self-center">PDF sedang digenerate...</span>
                 @endif
                 <a href="{{ route('permohonan.index') }}" class="btn-ghost btn-sm">← Kembali</a>
             </div>
@@ -75,7 +82,12 @@
                 <h3 class="text-sm font-semibold text-slate-800">Dokumen Permohonan</h3>
             </div>
             <div class="overflow-x-auto">
-                @include('permohonan.partials.document-preview', ['p' => $permohonan])
+                <div class="card">
+                    <div class="overflow-hidden rounded-b-card" style="height: 700px;">
+                        <iframe src="{{ route('dokumen.preview', $permohonan) }}"
+                            style="width:100%;height:100%;border:none;" title="Preview Dokumen FRUID"></iframe>
+                    </div>
+                </div>
             </div>
         </div>
 
