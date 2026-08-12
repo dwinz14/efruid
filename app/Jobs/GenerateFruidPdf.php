@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Enums\AksiAudit;
 use App\Models\Permohonan;
 use App\Services\AuditService;
+use App\Services\NotificationService;
 use App\Services\PdfService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -25,7 +26,7 @@ class GenerateFruidPdf implements ShouldQueue
         private readonly int $executorId,
     ) {}
 
-    public function handle(PdfService $pdfService): void
+    public function handle(PdfService $pdfService, NotificationService $notifService): void
     {
         $permohonan = Permohonan::find($this->permohonanId);
 
@@ -47,6 +48,9 @@ class GenerateFruidPdf implements ShouldQueue
                 ['pdf_path' => $path],
                 $permohonan->nomor_dokumen,
             );
+
+            // Notif ke pemohon setelah PDF siap
+            $notifService->notifyExecuted($permohonan->fresh());
         } catch (\Throwable $e) {
             Log::error("GenerateFruidPdf gagal untuk #{$this->permohonanId}: " . $e->getMessage());
             throw $e; // re-throw agar queue mencatat sebagai failed

@@ -42,13 +42,13 @@ class DocumentRenderer
             'tipePerub'    => $tipePerub,
 
             // Checkbox marks
-            'cbPendaftaran' => $jenis === 'pendaftaran' ? '&#10003;' : '&nbsp;',
-            'cbPerubahan'   => $jenis === 'perubahan'   ? '&#10003;' : '&nbsp;',
-            'cbNonaktif'    => $jenis === 'nonaktif'    ? '&#10003;' : '&nbsp;',
+            'cbPendaftaran' => $jenis === 'pendaftaran' ? '&radic;' : '&nbsp;',
+            'cbPerubahan'   => $jenis === 'perubahan'   ? '&radic;' : '&nbsp;',
+            'cbNonaktif'    => $jenis === 'nonaktif'    ? '&radic;' : '&nbsp;',
             'cbPermanen'    => ($jenis === 'perubahan' && $tipePerub === 'permanen')
-                ? '&#10003;' : '&nbsp;',
+                ? '&radic;' : '&nbsp;',
             'cbSementara'   => ($jenis === 'perubahan' && $tipePerub === 'sementara')
-                ? '&#10003;' : '&nbsp;',
+                ? '&radic;' : '&nbsp;',
 
             // Tanggal format pendek
             'tglPermanen'  => $p->tgl_permanen

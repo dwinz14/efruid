@@ -83,6 +83,18 @@ Route::middleware(['auth', 'email.verified'])->group(function () {
             ['Content-Type' => 'image/png', 'Cache-Control' => 'private, max-age=3600']
         );
     })->name('signature.file');
+
+    // Notifications
+    Route::prefix('notifications')->name('notifications.')->group(function () {
+        Route::get('/count',        [App\Http\Controllers\NotificationController::class, 'count'])
+            ->name('count');
+        Route::get('/',             [App\Http\Controllers\NotificationController::class, 'index'])
+            ->name('index');
+        Route::post('/read',        [App\Http\Controllers\NotificationController::class, 'markRead'])
+            ->name('read');
+        Route::post('/read-all',    [App\Http\Controllers\NotificationController::class, 'markAllRead'])
+            ->name('readAll');
+    });
 });
 
 // Approval Atasan

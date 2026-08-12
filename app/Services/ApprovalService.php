@@ -13,6 +13,9 @@ use Illuminate\Support\Facades\Storage;
 
 class ApprovalService
 {
+
+    public function __construct(private NotificationService $notifService) {}
+
     // ── Approve oleh Atasan ───────────────────────────────────────────────
 
     public function approveAtasan(Permohonan $permohonan, User $approver): void
@@ -58,6 +61,14 @@ class ApprovalService
             ['status' => $statusKe->value],
             $permohonan->nomor_dokumen,
         );
+
+        // Notifikasi berdasarkan status berikutnya
+        $fresh = $permohonan->fresh();
+        if ($fresh->status->value === 'PENDING_DIRUT') {
+            $this->notifService->notifyApprovedToDirut($fresh);
+        } else {
+            $this->notifService->notifyApprovedToIt($fresh);
+        }
     }
 
     // ── Approve oleh Dirut ────────────────────────────────────────────────
@@ -96,6 +107,9 @@ class ApprovalService
             ['status' => $statusKe->value],
             $permohonan->nomor_dokumen,
         );
+
+        //notifikasi
+        $this->notifService->notifyDirutApprovedToIt($permohonan->fresh());
     }
 
     // ── Reject ────────────────────────────────────────────────────────────
@@ -127,6 +141,9 @@ class ApprovalService
             ['status' => StatusPermohonan::REJECTED->value, 'alasan' => $alasan],
             $permohonan->nomor_dokumen,
         );
+
+        //notifikasi
+        $this->notifService->notifyRejected($permohonan->fresh());
     }
 
     // ── Revisi (Pemohon pilih revisi setelah reject) ──────────────────────

@@ -23,6 +23,44 @@
 
 /* ── Component shortcuts ── */
 @layer components {
+    /* Notification badge */
+    .notif-badge {
+        @apply absolute -top-1 -right-1 min-w-4 h-4 px-1
+           bg-red-500 text-white text-xs font-bold
+           rounded-full flex items-center justify-center
+           leading-none;
+    }
+
+    /* Notification dropdown */
+    .notif-dropdown {
+        @apply absolute right-0 top-full mt-2 w-80 bg-white
+           rounded-xl shadow-lg border border-surface-border z-50;
+    }
+
+    /* Notification item */
+    .notif-item {
+        @apply w-full flex items-start gap-3 px-4 py-3
+           hover:bg-slate-50 transition-colors text-left
+           border-b border-surface-border last:border-b-0;
+    }
+    .notif-item-unread {
+        @apply bg-brand-50;
+    }
+    .notif-item-read {
+        @apply bg-white;
+    }
+
+    .notif-item-icon {
+        @apply w-7 h-7 rounded-full bg-slate-100
+           flex items-center justify-center flex-shrink-0 mt-0.5;
+    }
+    .notif-item-content {
+        @apply flex-1 min-w-0;
+    }
+    .notif-unread-dot {
+        @apply w-2 h-2 rounded-full bg-brand-500 flex-shrink-0 mt-1.5;
+    }
+
     /* Card */
     .card {
         @apply bg-surface-card rounded-card shadow-card border border-surface-border;

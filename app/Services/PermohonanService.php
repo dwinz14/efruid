@@ -14,6 +14,9 @@ use Illuminate\Support\Facades\Storage;
 
 class PermohonanService
 {
+
+    public function __construct(private NotificationService $notifService) {}
+
     // ── Buat draft baru ───────────────────────────────────────────────────
 
     public function createDraft(User $pemohon, array $data): Permohonan
@@ -113,6 +116,9 @@ class PermohonanService
             ['nomor_dokumen' => $nomorDokumen, 'status' => StatusPermohonan::PENDING_ATASAN->value],
             $nomorDokumen,
         );
+
+        // Kirim notifikasi ke atasan
+        $this->notifService->notifySubmit($permohonan->fresh());
 
         return $permohonan->fresh();
     }
