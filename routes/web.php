@@ -18,11 +18,6 @@ require __DIR__ . '/auth.php';
 // Route placeholders agar sidebar tidak error saat build layout
 Route::middleware(['auth', 'email.verified'])->group(function () {
 
-    Route::get('/admin/users', fn() => view('dashboard'))->name('admin.users.index');
-    Route::get('/admin/kantors', fn() => view('dashboard'))->name('admin.kantors.index');
-    Route::get('/admin/jabatans', fn() => view('dashboard'))->name('admin.jabatans.index');
-    Route::get('/admin/audit-logs', fn() => view('dashboard'))->name('admin.audit-logs.index');
-
     // Permohonan
     Route::get('/permohonan', [App\Http\Controllers\PermohonanController::class, 'index'])
         ->name('permohonan.index');
@@ -96,6 +91,63 @@ Route::middleware(['auth', 'email.verified'])->group(function () {
             ->name('readAll');
     });
 });
+
+//admin
+Route::middleware(['auth', 'email.verified', 'role:super_admin'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+
+        // Users
+        Route::get('/users', [App\Http\Controllers\Admin\UserController::class, 'index'])
+            ->name('users.index');
+        Route::get('/users/create', [App\Http\Controllers\Admin\UserController::class, 'create'])
+            ->name('users.create');
+        Route::post('/users', [App\Http\Controllers\Admin\UserController::class, 'store'])
+            ->name('users.store');
+        Route::get('/users/{user}', [App\Http\Controllers\Admin\UserController::class, 'show'])
+            ->name('users.show');
+        Route::get('/users/{user}/edit', [App\Http\Controllers\Admin\UserController::class, 'edit'])
+            ->name('users.edit');
+        Route::put('/users/{user}', [App\Http\Controllers\Admin\UserController::class, 'update'])
+            ->name('users.update');
+        Route::post('/users/{user}/reset-password', [App\Http\Controllers\Admin\UserController::class, 'resetPassword'])
+            ->name('users.resetPassword');
+
+        // Kantors
+        Route::get('/kantor', [App\Http\Controllers\Admin\KantorController::class, 'index'])
+            ->name('kantor.index');
+        Route::post('/kantor', [App\Http\Controllers\Admin\KantorController::class, 'store'])
+            ->name('kantor.store');
+        Route::put('/kantor/{kantor}', [App\Http\Controllers\Admin\KantorController::class, 'update'])
+            ->name('kantor.update');
+        Route::delete('/kantor/{kantor}', [App\Http\Controllers\Admin\KantorController::class, 'destroy'])
+            ->name('kantor.destroy');
+
+        // Jabatans
+        Route::get('/jabatan', [App\Http\Controllers\Admin\JabatanController::class, 'index'])
+            ->name('jabatan.index');
+        Route::post('/jabatan', [App\Http\Controllers\Admin\JabatanController::class, 'store'])
+            ->name('jabatan.store');
+        Route::put('/jabatan/{jabatan}', [App\Http\Controllers\Admin\JabatanController::class, 'update'])
+            ->name('jabatan.update');
+        Route::delete('/jabatan/{jabatan}', [App\Http\Controllers\Admin\JabatanController::class, 'destroy'])
+            ->name('jabatan.destroy');
+
+        // Audit Logs
+        Route::get('/audit-logs', [App\Http\Controllers\Admin\AuditLogController::class, 'index'])
+            ->name('audit-logs.index');
+        Route::get('/audit-logs/export', [App\Http\Controllers\Admin\AuditLogController::class, 'export'])
+            ->name('audit-logs.export');
+        Route::get('/audit-logs/{auditLog}', [App\Http\Controllers\Admin\AuditLogController::class, 'show'])
+            ->name('audit-logs.show');
+
+        // Semua Permohonan
+        Route::get('/permohonan', [App\Http\Controllers\Admin\PermohonanController::class, 'index'])
+            ->name('permohonan.index');
+        Route::get('/permohonan/{permohonan}', [App\Http\Controllers\Admin\PermohonanController::class, 'show'])
+            ->name('permohonan.show');
+    });
 
 // Approval Atasan
 Route::middleware('role:atasan')->group(function () {
