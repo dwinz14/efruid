@@ -9,40 +9,53 @@ class JabatanSeeder extends Seeder
 {
     public function run(): void
     {
-        // Port dari jabatan.js legacy v1, urutkan alfabetis kecuali LAINNYA di akhir
         $jabatans = [
-            ['nama' => 'ACCOUNT OFFICER STAFF',          'urutan' => 1,  'is_lainnya' => false],
-            ['nama' => 'ACCOUNTING STAFF',               'urutan' => 2,  'is_lainnya' => false],
-            ['nama' => 'ADMIN KREDIT STAFF',             'urutan' => 3,  'is_lainnya' => false],
-            ['nama' => 'CUSTOMER SERVICE',               'urutan' => 4,  'is_lainnya' => false],
-            ['nama' => 'DIREKTUR BISNIS',                'urutan' => 5,  'is_lainnya' => false],
-            ['nama' => 'DIREKTUR KEPATUHAN',             'urutan' => 6,  'is_lainnya' => false],
-            ['nama' => 'DIREKTUR UTAMA',                 'urutan' => 7,  'is_lainnya' => false],
-            ['nama' => 'HEAD TELLER',                    'urutan' => 8,  'is_lainnya' => false],
-            ['nama' => 'KASIE COLLECTION',               'urutan' => 9,  'is_lainnya' => false],
-            ['nama' => 'KASIE CUSTOMER SERVICE',         'urutan' => 10, 'is_lainnya' => false],
-            ['nama' => 'KASIE IT',                       'urutan' => 11, 'is_lainnya' => false],
-            ['nama' => 'KASIE MARKETING',                'urutan' => 12, 'is_lainnya' => false],
-            ['nama' => 'KASIE OPERASIONAL',              'urutan' => 13, 'is_lainnya' => false],
-            ['nama' => 'KEPALA BAGIAN BISNIS',           'urutan' => 14, 'is_lainnya' => false],
-            ['nama' => 'KEPALA BAGIAN HRD',              'urutan' => 15, 'is_lainnya' => false],
-            ['nama' => 'KEPALA BAGIAN KEPATUHAN & MANRISK', 'urutan' => 16, 'is_lainnya' => false],
-            ['nama' => 'KEPALA BAGIAN OPERASIONAL',      'urutan' => 17, 'is_lainnya' => false],
-            ['nama' => 'KEPALA BAGIAN SKAI',             'urutan' => 18, 'is_lainnya' => false],
-            ['nama' => 'KEPALA KANTOR KAS',              'urutan' => 19, 'is_lainnya' => false],
-            ['nama' => 'KEPATUHAN & MANRISK STAFF',      'urutan' => 20, 'is_lainnya' => false],
-            ['nama' => 'KOORDINATOR KREDIT',             'urutan' => 21, 'is_lainnya' => false],
-            ['nama' => 'PIMPINAN CABANG',                'urutan' => 22, 'is_lainnya' => false],
-            ['nama' => 'SEKRETARIS DIREKSI',             'urutan' => 23, 'is_lainnya' => false],
-            ['nama' => 'STAFF IT',                       'urutan' => 24, 'is_lainnya' => false],
-            ['nama' => 'STAFF SKAI',                     'urutan' => 25, 'is_lainnya' => false],
-            ['nama' => 'TABUNGAN DEPOSITO',              'urutan' => 26, 'is_lainnya' => false],
-            ['nama' => 'TELLER',                         'urutan' => 27, 'is_lainnya' => false],
-            ['nama' => 'LAINNYA',                        'urutan' => 99, 'is_lainnya' => true],
+            // Level 1 — Direktur Utama
+            ['nama' => 'DIREKTUR UTAMA',                    'urutan' => 1,  'level' => 1, 'is_lainnya' => false],
+
+            // Level 2 — Direktur
+            ['nama' => 'DIREKTUR BISNIS',                   'urutan' => 2,  'level' => 2, 'is_lainnya' => false],
+            ['nama' => 'DIREKTUR KEPATUHAN',                'urutan' => 3,  'level' => 2, 'is_lainnya' => false],
+
+            // Level 3 — Kepala Bagian / Pimpinan Cabang
+            ['nama' => 'KEPALA BAGIAN BISNIS',              'urutan' => 4,  'level' => 3, 'is_lainnya' => false],
+            ['nama' => 'KEPALA BAGIAN HRD',                 'urutan' => 5,  'level' => 3, 'is_lainnya' => false],
+            ['nama' => 'KEPALA BAGIAN KEPATUHAN & MANRISK', 'urutan' => 6,  'level' => 3, 'is_lainnya' => false],
+            ['nama' => 'KEPALA BAGIAN OPERASIONAL',         'urutan' => 7,  'level' => 3, 'is_lainnya' => false],
+            ['nama' => 'KEPALA BAGIAN SKAI',                'urutan' => 8,  'level' => 3, 'is_lainnya' => false],
+            ['nama' => 'PIMPINAN CABANG',                   'urutan' => 9,  'level' => 3, 'is_lainnya' => false],
+
+            // Level 4 — Kasie / Kepala Unit
+            ['nama' => 'KASIE COLLECTION',                  'urutan' => 10, 'level' => 4, 'is_lainnya' => false],
+            ['nama' => 'KASIE CUSTOMER SERVICE',            'urutan' => 11, 'level' => 4, 'is_lainnya' => false],
+            ['nama' => 'KASIE IT',                          'urutan' => 12, 'level' => 4, 'is_lainnya' => false],
+            ['nama' => 'KASIE MARKETING',                   'urutan' => 13, 'level' => 4, 'is_lainnya' => false],
+            ['nama' => 'KASIE OPERASIONAL',                 'urutan' => 14, 'level' => 4, 'is_lainnya' => false],
+            ['nama' => 'KEPALA KANTOR KAS',                 'urutan' => 15, 'level' => 4, 'is_lainnya' => false],
+
+            // Level 5 — Staff & Pelaksana
+            ['nama' => 'ACCOUNT OFFICER STAFF',             'urutan' => 16, 'level' => 5, 'is_lainnya' => false],
+            ['nama' => 'ACCOUNTING STAFF',                  'urutan' => 17, 'level' => 5, 'is_lainnya' => false],
+            ['nama' => 'ADMIN KREDIT STAFF',                'urutan' => 18, 'level' => 5, 'is_lainnya' => false],
+            ['nama' => 'CUSTOMER SERVICE',                  'urutan' => 19, 'level' => 5, 'is_lainnya' => false],
+            ['nama' => 'HEAD TELLER',                       'urutan' => 20, 'level' => 5, 'is_lainnya' => false],
+            ['nama' => 'KEPATUHAN & MANRISK STAFF',         'urutan' => 21, 'level' => 5, 'is_lainnya' => false],
+            ['nama' => 'KOORDINATOR KREDIT',                'urutan' => 22, 'level' => 5, 'is_lainnya' => false],
+            ['nama' => 'SEKRETARIS DIREKSI',                'urutan' => 23, 'level' => 5, 'is_lainnya' => false],
+            ['nama' => 'STAFF IT',                          'urutan' => 24, 'level' => 5, 'is_lainnya' => false],
+            ['nama' => 'STAFF SKAI',                        'urutan' => 25, 'level' => 5, 'is_lainnya' => false],
+            ['nama' => 'TABUNGAN DEPOSITO',                 'urutan' => 26, 'level' => 5, 'is_lainnya' => false],
+            ['nama' => 'TELLER',                            'urutan' => 27, 'level' => 5, 'is_lainnya' => false],
+
+            // Level 5 — LAINNYA (selalu di akhir)
+            ['nama' => 'LAINNYA',                           'urutan' => 99, 'level' => 5, 'is_lainnya' => true],
         ];
 
         foreach ($jabatans as $data) {
-            Jabatan::updateOrCreate(['nama' => $data['nama']], $data);
+            Jabatan::updateOrCreate(
+                ['nama' => $data['nama']],
+                $data
+            );
         }
     }
 }

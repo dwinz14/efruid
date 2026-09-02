@@ -19,16 +19,16 @@ class JabatanController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'nama'       => ['required', 'string', 'max:100', 'unique:jabatans,nama'],
-            'urutan'     => ['required', 'integer', 'min:0', 'max:999'],
-            'is_lainnya' => ['boolean'],
+            'nama'    => ['required', 'string', 'max:100', 'unique:jabatans,nama'],
+            'urutan'  => ['required', 'integer', 'min:0', 'max:999'],
+            'level'   => ['required', 'integer', 'min:0', 'max:9'],
         ]);
 
         Jabatan::create([
-            'nama'       => strtoupper(trim($request->nama)),
-            'urutan'     => $request->urutan,
-            'is_lainnya' => $request->boolean('is_lainnya'),
-            'is_active'  => true,
+            'nama'      => strtoupper(trim($request->nama)),
+            'urutan'    => $request->urutan,
+            'level'     => $request->level,
+            'is_active' => true,
         ]);
 
         return redirect()->route('admin.jabatan.index')
@@ -40,12 +40,14 @@ class JabatanController extends Controller
         $request->validate([
             'nama'      => ['required', 'string', 'max:100', 'unique:jabatans,nama,' . $jabatan->id],
             'urutan'    => ['required', 'integer', 'min:0', 'max:999'],
+            'level'     => ['required', 'integer', 'min:0', 'max:9'],
             'is_active' => ['boolean'],
         ]);
 
         $jabatan->update([
             'nama'      => strtoupper(trim($request->nama)),
             'urutan'    => $request->urutan,
+            'level'     => $request->level,
             'is_active' => $request->boolean('is_active'),
         ]);
 

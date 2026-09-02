@@ -4,47 +4,49 @@ namespace App\Services;
 
 use App\Enums\AksiAudit;
 use App\Enums\StatusPermohonan;
-use App\Models\Kantor;
+use App\Models\Jabatan;
 use App\Models\Permohonan;
 use App\Models\User;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class PermohonanService
 {
-
     public function __construct(private NotificationService $notifService) {}
 
     // ── Buat draft baru ───────────────────────────────────────────────────
 
     public function createDraft(User $pemohon, array $data): Permohonan
     {
+        // Snapshot nama atasan (null jika Dirut)
+        $namaAtasan = null;
+        if (! empty($data['atasan_id'])) {
+            $namaAtasan = User::find($data['atasan_id'])?->name;
+        }
+
         $permohonan = Permohonan::create([
-            'form_type' => $data['form_type'],
+            'form_type'          => $data['form_type'],
             'tanggal_permohonan' => Carbon::today(),
-            'pemohon_id' => $pemohon->id,
-            'kantor_id' => $data['kantor_id'],
-            'nama_pemohon' => $pemohon->name,
-            'jabatan_pemohon' => $pemohon->jabatan_label,
-            'nik_pemohon' => $pemohon->nik,
-            'user_id_ussi' => $data['user_id_ussi'],
-            'jenis_permohonan' => $data['jenis_permohonan'],
-            'tipe_perubahan' => $data['tipe_perubahan'] ?? null,
-            'jabatan_lama' => $data['jabatan_lama'] ?? null,
-            'jabatan_baru' => $data['jabatan_baru'] ?? null,
-            'alasan_perubahan' => $data['alasan_perubahan'] ?? null,
-            'tgl_permanen' => $data['tgl_permanen'] ?? null,
-            'tgl_mulai' => $data['tgl_mulai'] ?? null,
-            'tgl_selesai' => $data['tgl_selesai'] ?? null,
-            'tgl_nonaktif' => $data['tgl_nonaktif'] ?? null,
-            'access_level' => $data['access_level'],
-            'atasan_id' => $data['atasan_id'] ?? null,
-            'nama_atasan_ttd' => isset($data['atasan_id'])
-                ? User::find($data['atasan_id'])?->name
-                : null,
-            'status' => StatusPermohonan::DRAFT,
+            'pemohon_id'         => $pemohon->id,
+            'kantor_id'          => $data['kantor_id'],
+            'nama_pemohon'       => $pemohon->name,
+            'jabatan_pemohon'    => $pemohon->jabatan_label,
+            'nik_pemohon'        => $pemohon->nik,
+            'user_id_ussi'       => $data['user_id_ussi'],
+            'jenis_permohonan'   => $data['jenis_permohonan'],
+            'tipe_perubahan'     => $data['tipe_perubahan']  ?? null,
+            'jabatan_lama'       => $data['jabatan_lama']    ?? null,
+            'jabatan_baru'       => $data['jabatan_baru']    ?? null,
+            'alasan_perubahan'   => $data['alasan_perubahan'] ?? null,
+            'tgl_permanen'       => $data['tgl_permanen']    ?? null,
+            'tgl_mulai'          => $data['tgl_mulai']       ?? null,
+            'tgl_selesai'        => $data['tgl_selesai']     ?? null,
+            'tgl_nonaktif'       => $data['tgl_nonaktif']    ?? null,
+            'access_level'       => $data['access_level'],
+            'atasan_id'          => $data['atasan_id']       ?? null,
+            'nama_atasan_ttd'    => $namaAtasan,
+            'status'             => StatusPermohonan::DRAFT,
         ]);
 
         AuditService::log(
@@ -56,51 +58,63 @@ class PermohonanService
         return $permohonan;
     }
 
-    // ── Update draft yang sudah ada ───────────────────────────────────────
+    // ── Update draft ──────────────────────────────────────────────────────
 
     public function updateDraft(Permohonan $permohonan, array $data): Permohonan
     {
-        // Snapshot nama atasan jika atasan_id berubah
         $namaAtasan = null;
         if (! empty($data['atasan_id'])) {
             $namaAtasan = User::find($data['atasan_id'])?->name;
         }
 
         $permohonan->update([
-            'form_type' => $data['form_type'],
-            'kantor_id' => $data['kantor_id'],
-            'user_id_ussi' => $data['user_id_ussi'],
+            'form_type'        => $data['form_type'],
+            'kantor_id'        => $data['kantor_id'],
+            'user_id_ussi'     => $data['user_id_ussi'],
             'jenis_permohonan' => $data['jenis_permohonan'],
-            'tipe_perubahan' => $data['tipe_perubahan'] ?? null,
-            'jabatan_lama' => $data['jabatan_lama'] ?? null,
-            'jabatan_baru' => $data['jabatan_baru'] ?? null,
+            'tipe_perubahan'   => $data['tipe_perubahan']   ?? null,
+            'jabatan_lama'     => $data['jabatan_lama']     ?? null,
+            'jabatan_baru'     => $data['jabatan_baru']     ?? null,
             'alasan_perubahan' => $data['alasan_perubahan'] ?? null,
-            'tgl_permanen' => $data['tgl_permanen'] ?? null,
-            'tgl_mulai' => $data['tgl_mulai'] ?? null,
-            'tgl_selesai' => $data['tgl_selesai'] ?? null,
-            'tgl_nonaktif' => $data['tgl_nonaktif'] ?? null,
-            'access_level' => $data['access_level'],
-            'atasan_id' => $data['atasan_id'] ?? null,
-            'nama_atasan_ttd' => $namaAtasan,
+            'tgl_permanen'     => $data['tgl_permanen']     ?? null,
+            'tgl_mulai'        => $data['tgl_mulai']        ?? null,
+            'tgl_selesai'      => $data['tgl_selesai']      ?? null,
+            'tgl_nonaktif'     => $data['tgl_nonaktif']     ?? null,
+            'access_level'     => $data['access_level'],
+            'atasan_id'        => $data['atasan_id']        ?? null,
+            'nama_atasan_ttd'  => $namaAtasan,
         ]);
 
         return $permohonan;
     }
 
-    // ── Submit permohonan (DRAFT → PENDING_ATASAN) ────────────────────────
+    // ── Submit ────────────────────────────────────────────────────────────
 
     public function submit(Permohonan $permohonan, User $pemohon): Permohonan
     {
+        $pemohon->loadMissing('jabatan');
+
+        // Dirut (L1) tidak perlu atasan → langsung PENDING_IT
+        // Semua level lain → PENDING_ATASAN
+        $isDirut     = $pemohon->isDirutByJabatan();
+        $statusAwal  = $isDirut
+            ? StatusPermohonan::PENDING_IT
+            : StatusPermohonan::PENDING_ATASAN;
+
         $nomorDokumen = $this->generateNomorDokumen($permohonan);
 
-        // Copy snapshot TTD pemohon jika ada
+        // Copy snapshot TTD pemohon
         $ttdPemohonPath = null;
         if ($pemohon->signature_path && Storage::exists($pemohon->signature_path)) {
-            $ttdPemohonPath = $this->copySignatureSnapshot($pemohon, $permohonan->id, 'pemohon');
+            $ttdPemohonPath = $this->copySignatureSnapshot(
+                $pemohon,
+                $permohonan->id,
+                'pemohon'
+            );
         }
 
         $permohonan->update([
-            'status'           => StatusPermohonan::PENDING_ATASAN,
+            'status'           => $statusAwal,
             'nomor_dokumen'    => $nomorDokumen,
             'nama_pemohon'     => $pemohon->name,
             'jabatan_pemohon'  => $pemohon->jabatan_label,
@@ -113,43 +127,28 @@ class PermohonanService
             $pemohon->id,
             $permohonan,
             null,
-            ['nomor_dokumen' => $nomorDokumen, 'status' => StatusPermohonan::PENDING_ATASAN->value],
+            [
+                'nomor_dokumen'  => $nomorDokumen,
+                'status'         => $statusAwal->value,
+                'pemohon_level'  => $pemohon->jabatan_level,
+                'bypass_atasan'  => $isDirut,
+            ],
             $nomorDokumen,
         );
 
-        // Kirim notifikasi ke atasan
-        $this->notifService->notifySubmit($permohonan->fresh());
+        $fresh = $permohonan->fresh();
 
-        return $permohonan->fresh();
+        // Notifikasi: jika Dirut langsung ke IT, jika tidak ke atasan
+        if ($isDirut) {
+            $this->notifService->notifyApprovedToIt($fresh);
+        } else {
+            $this->notifService->notifySubmit($fresh);
+        }
+
+        return $fresh;
     }
 
-    // ── Generate PDF dokumen FRUID ────────────────────────────────────────
-
-    public function generatePdf(Permohonan $permohonan): string
-    {
-        $permohonan->load('kantor', 'atasan', 'pemohon');
-
-        $pdf = Pdf::loadView('permohonan.partials.document-preview', ['p' => $permohonan])
-            ->setPaper('A4', 'portrait');
-
-        $path = "pdf/permohonan/{$permohonan->id}.pdf";
-        Storage::put($path, $pdf->output());
-
-        $permohonan->update(['pdf_path' => $path]);
-
-        AuditService::log(
-            AksiAudit::PDF_GENERATED,
-            $permohonan->pemohon_id,
-            $permohonan,
-            null,
-            ['pdf_path' => $path],
-            $permohonan->nomor_dokumen,
-        );
-
-        return $path;
-    }
-
-    // ── Batalkan permohonan ───────────────────────────────────────────────
+    // ── Batalkan ──────────────────────────────────────────────────────────
 
     public function cancel(Permohonan $permohonan, User $pemohon): void
     {
@@ -172,12 +171,10 @@ class PermohonanService
     private function generateNomorDokumen(Permohonan $permohonan): string
     {
         return DB::transaction(function () use ($permohonan) {
-            // Lock untuk cegah concurrent insert
-            $kantor = Kantor::lockForUpdate()->find($permohonan->kantor_id);
-            $tahun = Carbon::today()->format('Y');
-            $kode = strtoupper($kantor->kode);
+            $kantor = \App\Models\Kantor::lockForUpdate()->find($permohonan->kantor_id);
+            $tahun  = Carbon::today()->format('Y');
+            $kode   = strtoupper($kantor->kode);
 
-            // Hitung sequence: berapa permohonan dari kantor ini di tahun ini
             $count = Permohonan::whereYear('tanggal_permohonan', $tahun)
                 ->where('kantor_id', $permohonan->kantor_id)
                 ->whereNotIn('status', [
@@ -193,16 +190,15 @@ class PermohonanService
         });
     }
 
-    // ── Copy snapshot TTD ke folder permohonan ────────────────────────────
+    // ── Copy snapshot TTD ─────────────────────────────────────────────────
 
     private function copySignatureSnapshot(User $user, int $permohonanId, string $role): string
     {
-        $src = $user->signature_path;
+        $src  = $user->signature_path;
         $dest = "signatures/snapshots/{$permohonanId}_{$role}.png";
 
         if (Storage::exists($src)) {
             Storage::copy($src, $dest);
-
             return $dest;
         }
 

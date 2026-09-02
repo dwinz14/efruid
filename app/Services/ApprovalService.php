@@ -3,9 +3,9 @@
 namespace App\Services;
 
 use App\Enums\AksiAudit;
-use App\Enums\FormType;
 use App\Enums\StatusPermohonan;
 use App\Models\ApprovalLog;
+use App\Models\Jabatan;
 use App\Models\Permohonan;
 use App\Models\User;
 use Carbon\Carbon;
@@ -13,37 +13,41 @@ use Illuminate\Support\Facades\Storage;
 
 class ApprovalService
 {
-
     public function __construct(private NotificationService $notifService) {}
 
-    // ── Approve oleh Atasan ───────────────────────────────────────────────
+    // ── Approve oleh Atasan (berlaku untuk semua level — Kasie, Pimcab, Dirut) ──
 
     public function approveAtasan(Permohonan $permohonan, User $approver): void
     {
-        $statusDari = $permohonan->status;
+        $statusDari   = $permohonan->status;
+        $approverLoad = $approver->load('jabatan');
 
-        // Tentukan status berikutnya
-        $statusKe = $permohonan->requiresDirut()
-            ? StatusPermohonan::PENDING_DIRUT
-            : StatusPermohonan::PENDING_IT;
+        // Routing logika berdasarkan level jabatan approver:
+        // - Jika approver adalah Dirut (level 1) → langsung PENDING_IT
+        //   (Dirut sudah approve, tidak perlu PENDING_DIRUT lagi)
+        // - Jika form rangkap & approver bukan Dirut → butuh PENDING_DIRUT
+        // - Default → PENDING_IT
+        $approverLevel  = $approverLoad->jabatan?->level ?? Jabatan::LEVEL_STAFF;
+        $approverIsDirut = $approverLevel === Jabatan::LEVEL_DIRUT;
 
-        // Embed TTD atasan
+        $statusKe = match (true) {
+            $approverIsDirut                              => StatusPermohonan::PENDING_IT,
+            $permohonan->form_type->requiresDirut()       => StatusPermohonan::PENDING_DIRUT,
+            default                                       => StatusPermohonan::PENDING_IT,
+        };
+
         $ttdPath = $this->embedSignature($approver, $permohonan, 'atasan');
+        $stamp   = $this->generateStamp($approver, 'Atasan', $permohonan);
 
-        // Generate verification stamp
-        $stamp = $this->generateStamp($approver, 'Atasan', $permohonan);
-
-        // Update permohonan
         $stamps   = $permohonan->verification_stamps ?? [];
         $stamps[] = $stamp;
 
         $permohonan->update([
-            'status'           => $statusKe,
-            'ttd_atasan_path'  => $ttdPath,
+            'status'              => $statusKe,
+            'ttd_atasan_path'     => $ttdPath,
             'verification_stamps' => $stamps,
         ]);
 
-        // Catat approval log
         ApprovalLog::create([
             'permohonan_id' => $permohonan->id,
             'user_id'       => $approver->id,
@@ -58,20 +62,20 @@ class ApprovalService
             $approver->id,
             $permohonan,
             ['status' => $statusDari->value],
-            ['status' => $statusKe->value],
+            ['status' => $statusKe->value, 'approver_level' => $approverLevel],
             $permohonan->nomor_dokumen,
         );
 
         // Notifikasi berdasarkan status berikutnya
         $fresh = $permohonan->fresh();
-        if ($fresh->status->value === 'PENDING_DIRUT') {
+        if ($fresh->status === StatusPermohonan::PENDING_DIRUT) {
             $this->notifService->notifyApprovedToDirut($fresh);
         } else {
             $this->notifService->notifyApprovedToIt($fresh);
         }
     }
 
-    // ── Approve oleh Dirut ────────────────────────────────────────────────
+    // ── Approve oleh Dirut (dari PENDING_DIRUT — form rangkap L5/L4) ─────
 
     public function approveDirut(Permohonan $permohonan, User $approver): void
     {
@@ -108,7 +112,6 @@ class ApprovalService
             $permohonan->nomor_dokumen,
         );
 
-        //notifikasi
         $this->notifService->notifyDirutApprovedToIt($permohonan->fresh());
     }
 
@@ -119,7 +122,7 @@ class ApprovalService
         $statusDari = $permohonan->status;
 
         $permohonan->update([
-            'status'       => StatusPermohonan::REJECTED,
+            'status'        => StatusPermohonan::REJECTED,
             'alasan_reject' => $alasan,
         ]);
 
@@ -142,17 +145,15 @@ class ApprovalService
             $permohonan->nomor_dokumen,
         );
 
-        //notifikasi
         $this->notifService->notifyRejected($permohonan->fresh());
     }
 
-    // ── Revisi (Pemohon pilih revisi setelah reject) ──────────────────────
+    // ── Revisi ────────────────────────────────────────────────────────────
 
     public function revise(Permohonan $permohonan, User $pemohon): void
     {
         $statusDari = $permohonan->status;
 
-        // Reset approval chain
         $permohonan->update([
             'status'              => StatusPermohonan::DRAFT,
             'alasan_reject'       => null,
@@ -182,13 +183,11 @@ class ApprovalService
         );
     }
 
-    // ── Embed TTD: copy file signature approver ke folder permohonan ──────
+    // ── Private helpers ───────────────────────────────────────────────────
 
     private function embedSignature(User $approver, Permohonan $permohonan, string $role): ?string
     {
-        if (! $approver->signature_path) {
-            return null;
-        }
+        if (! $approver->signature_path) return null;
 
         $src  = $approver->signature_path;
         $dest = "signatures/snapshots/{$permohonan->id}_{$role}.png";
@@ -201,13 +200,10 @@ class ApprovalService
         return null;
     }
 
-    // ── Generate verification stamp ───────────────────────────────────────
-
     private function generateStamp(User $approver, string $roleLabel, Permohonan $permohonan): array
     {
         $timestamp = Carbon::now()->setTimezone('Asia/Jakarta')->format('d/m/Y H:i:s') . ' WIB';
 
-        // Hash sederhana untuk integrity check
         $hashInput = implode('|', [
             $permohonan->nomor_dokumen ?? $permohonan->id,
             $approver->id,

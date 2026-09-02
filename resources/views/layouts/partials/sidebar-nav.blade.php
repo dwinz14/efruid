@@ -30,12 +30,18 @@
 </a>
 
 {{-- Approval (Atasan, Dirut, IT Staff) --}}
-@if ($user->hasAnyRole([RoleUser::ATASAN, RoleUser::DIRUT, RoleUser::IT_STAFF, RoleUser::SUPER_ADMIN]))
+@php
+    $hasPendingAsAtasan = \App\Models\Permohonan::where('atasan_id', $user->id)
+        ->where('status', \App\Enums\StatusPermohonan::PENDING_ATASAN->value)
+        ->exists();
+@endphp
+@if ($user->hasAnyRole([RoleUser::DIRUT, RoleUser::IT_STAFF, RoleUser::SUPER_ADMIN]) || $hasPendingAsAtasan)
+
     <div class="pt-3 pb-1 px-3">
         <p class="text-brand-500 text-xs uppercase font-semibold tracking-wider">Approval</p>
     </div>
 
-    @if ($user->hasAnyRole([RoleUser::ATASAN, RoleUser::SUPER_ADMIN]))
+    @if ($hasPendingAsAtasan || $user->hasAnyRole([RoleUser::SUPER_ADMIN]))
         <a href="{{ route('approval.atasan.index') }}"
             class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors {{ $active('approval.atasan') }}">
             <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"

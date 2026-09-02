@@ -2,20 +2,15 @@
 
 use Illuminate\Support\Facades\Route;
 
-// Redirect root ke dashboard (auth middleware akan redirect ke login jika belum auth)
-Route::get('/', fn() => redirect()->route('dashboard'));
-
-// Dashboard placeholder
-Route::get('/dashboard', fn() => view('dashboard'))
+Route::get('/dashboard', App\Http\Controllers\DashboardController::class)
     ->middleware(['auth', 'email.verified'])
     ->name('dashboard');
 
 
-// Placeholder routes (diimplementasi per fase)
-// Fase 2: auth routes ditangani Breeze
+
 require __DIR__ . '/auth.php';
 
-// Route placeholders agar sidebar tidak error saat build layout
+
 Route::middleware(['auth', 'email.verified'])->group(function () {
 
     // Permohonan
@@ -37,6 +32,8 @@ Route::middleware(['auth', 'email.verified'])->group(function () {
         ->name('permohonan.edit');
     Route::post('/permohonan/{permohonan}/cancel', [App\Http\Controllers\PermohonanController::class, 'cancel'])
         ->name('permohonan.cancel');
+    Route::post('/permohonan/{permohonan}/revise', [App\Http\Controllers\ApprovalController::class, 'revise'])
+        ->name('permohonan.revise');
     Route::get('/permohonan/{permohonan}/pdf', [App\Http\Controllers\EksekusiController::class, 'downloadPdf'])
         ->name('permohonan.pdf');
     Route::get('/dokumen/{permohonan}/preview', [App\Http\Controllers\DokumenController::class, 'preview'])
@@ -167,9 +164,25 @@ Route::middleware('role:dirut')->group(function () {
         ->name('approval.dirut.index');
     Route::get('/approval/dirut/{permohonan}', [App\Http\Controllers\ApprovalController::class, 'dirutShow'])
         ->name('approval.dirut.show');
-    Route::post('/approval/dirut/{permohonan}/approve', [App\Http\Controllers\ApprovalController::class, 'dirutApprove'])
+
+    // Approve sebagai atasan (permohonan L3/L2)
+    Route::post(
+        '/approval/dirut/{permohonan}/approve-as-atasan',
+        [App\Http\Controllers\ApprovalController::class, 'dirutApproveAsAtasan']
+    )
+        ->name('approval.dirut.approveAsAtasan');
+
+    // Approve sebagai Dirut (permohonan rangkap PENDING_DIRUT)
+    Route::post(
+        '/approval/dirut/{permohonan}/approve',
+        [App\Http\Controllers\ApprovalController::class, 'dirutApprove']
+    )
         ->name('approval.dirut.approve');
-    Route::post('/approval/dirut/{permohonan}/reject', [App\Http\Controllers\ApprovalController::class, 'dirutReject'])
+
+    Route::post(
+        '/approval/dirut/{permohonan}/reject',
+        [App\Http\Controllers\ApprovalController::class, 'dirutReject']
+    )
         ->name('approval.dirut.reject');
 });
 

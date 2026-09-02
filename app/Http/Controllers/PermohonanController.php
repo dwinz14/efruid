@@ -56,22 +56,47 @@ class PermohonanController extends Controller
         ]);
 
         $user = auth()->user()->load('kantor', 'jabatan');
-        $kantors = Kantor::where('is_active', true)->orderBy('nama')->get();
-        $jabatans = Jabatan::aktif()->get();
+        $pemohonLevel = $user->jabatan_level;
 
-        // Daftar user berole atasan di kantor user ini
-        $atasans = User::whereHas('roles', fn ($q) => $q->where('name', RoleUser::ATASAN->value))
-            ->where('kantor_id', $user->kantor_id)
-            ->where('is_active', true)
-            ->where('id', '!=', $user->id)
-            ->orderBy('name')
-            ->get();
+        // Resolve level atasan yang dibutuhkan
+        $targetAtasanLevels = $user->jabatan?->resolveTargetAtasanLevels();
 
-        $formType = $request->form_type;
+        // Build query atasan berdasarkan level jabatan pemohon
+        $atasans = collect();
+
+        if ($targetAtasanLevels !== null) {
+            $query = User::with('jabatan')
+                ->whereHas(
+                    'jabatan',
+                    fn($q) =>
+                    $q->whereIn('level', $targetAtasanLevels)
+                )
+                ->where('is_active', true)
+                ->where('id', '!=', $user->id)
+                ->orderBy(
+                    Jabatan::select('level')
+                        ->whereColumn('jabatans.id', 'users.jabatan_id')
+                )
+                ->orderBy('name');
+
+            // L5 dan L4 → atasan di kantor yang sama
+            // L3 dan L2 → atasan (Dirut, level 1) lintas kantor
+            if (in_array($pemohonLevel, [Jabatan::LEVEL_STAFF, Jabatan::LEVEL_KASIE])) {
+                $query->where('kantor_id', $user->kantor_id);
+            }
+            // L3/L2 → tidak filter kantor (Dirut ada di pusat)
+
+            $atasans = $query->get();
+        }
+        // Jika targetAtasanLevel === null (Dirut), $atasans tetap kosong
+
+        $kantors      = Kantor::where('is_active', true)->orderBy('nama')->get();
+        $jabatans     = Jabatan::aktif()->get();
+        $formType     = $request->form_type;
         $accessLevels = AccessLevel::cases();
-        $jenisList = JenisPermohonan::cases();
+        $jenisList    = JenisPermohonan::cases();
 
-        // Jika ada draft_id di session, load untuk edit
+        // Load draft jika ada
         $draft = null;
         if ($request->filled('draft_id')) {
             $draft = Permohonan::where('id', $request->draft_id)
@@ -79,6 +104,9 @@ class PermohonanController extends Controller
                 ->where('status', StatusPermohonan::DRAFT->value)
                 ->first();
         }
+
+        // Kirim info ke view: apakah pemohon ini Dirut (tidak perlu atasan)
+        $pemohonIsDirut = $user->isDirutByJabatan();
 
         return view('permohonan.create-step2', compact(
             'user',
@@ -88,7 +116,9 @@ class PermohonanController extends Controller
             'formType',
             'accessLevels',
             'jenisList',
-            'draft'
+            'draft',
+            'pemohonIsDirut',
+            'targetAtasanLevels'
         ));
     }
 
@@ -257,67 +287,46 @@ class PermohonanController extends Controller
             abort(404, 'Dokumen PDF belum tersedia.');
         }
 
-        $nama = 'FRUID-'.str_replace('/', '-', $permohonan->nomor_dokumen ?? $permohonan->id);
+        $nama = 'FRUID-' . str_replace('/', '-', $permohonan->nomor_dokumen ?? $permohonan->id);
 
-        return Storage::download($permohonan->pdf_path, $nama.'.pdf');
+        return Storage::download($permohonan->pdf_path, $nama . '.pdf');
     }
 
     // ── Helper: validasi data step 2 ─────────────────────────────────────
 
     private function validateStep2(Request $request, bool $isDraft = false): mixed
     {
-        // Saat draft: field detail boleh kosong, hanya divalidasi jika terisi
         $rules = [
-            'form_type' => ['required', 'in:normal,rangkap'],
-            'kantor_id' => ['required', 'exists:kantors,id'],
-            'user_id_ussi' => ['required', 'string', 'max:30', 'regex:/^[A-Za-z0-9_\-]+$/'],
+            'form_type'        => ['required', 'in:normal,rangkap'],
+            'kantor_id'        => ['required', 'exists:kantors,id'],
+            'user_id_ussi'     => ['required', 'string', 'max:30', 'regex:/^[A-Za-z0-9_\-]+$/'],
             'jenis_permohonan' => ['required', 'in:pendaftaran,perubahan,nonaktif'],
-            'access_level' => ['required', 'in:DIREKSI,ADMINISTRATOR,USER'],
-            'atasan_id' => $isDraft
-                ? ['sometimes', 'nullable', 'exists:users,id']
-                : ['required', 'exists:users,id'],
+            'access_level'     => ['required', 'in:DIREKSI,ADMINISTRATOR,USER'],
+            // atasan_id nullable — Dirut tidak punya atasan
+            'atasan_id'        => ['nullable', 'exists:users,id'],
         ];
 
-        // Validasi kondisional jenis permohonan
         if ($request->jenis_permohonan === 'perubahan') {
-            $rules['tipe_perubahan'] = $isDraft
-                ? ['sometimes', 'nullable', 'in:permanen,sementara']
-                : ['required', 'in:permanen,sementara'];
-            $rules['jabatan_lama'] = $isDraft
-                ? ['sometimes', 'nullable', 'string', 'max:150']
-                : ['required', 'string', 'max:150'];
-            $rules['jabatan_baru'] = $isDraft
-                ? ['sometimes', 'nullable', 'string', 'max:150']
-                : ['required', 'string', 'max:150'];
+            $rules['tipe_perubahan'] = ['required', 'in:permanen,sementara'];
+            $rules['jabatan_lama']   = ['required', 'string', 'max:150'];
+            $rules['jabatan_baru']   = ['required', 'string', 'max:150'];
 
             if ($request->tipe_perubahan === 'permanen') {
-                $rules['tgl_permanen'] = $isDraft
-                    ? ['sometimes', 'nullable', 'date']
-                    : ['required', 'date'];
+                $rules['tgl_permanen'] = ['required', 'date'];
             }
             if ($request->tipe_perubahan === 'sementara') {
-                $rules['tgl_mulai'] = $isDraft
-                    ? ['sometimes', 'nullable', 'date']
-                    : ['required', 'date'];
-                $rules['tgl_selesai'] = $isDraft
-                    ? array_merge(
-                        ['sometimes', 'nullable', 'date'],
-                        $request->filled('tgl_mulai') ? ['after:tgl_mulai'] : []
-                    )
-                    : ['required', 'date', 'after:tgl_mulai'];
+                $rules['tgl_mulai']   = ['required', 'date'];
+                $rules['tgl_selesai'] = ['required', 'date', 'after:tgl_mulai'];
             }
         }
 
         if ($request->jenis_permohonan === 'nonaktif') {
-            $rules['tgl_nonaktif'] = $isDraft
-                ? ['sometimes', 'nullable', 'date']
-                : ['required', 'date'];
+            $rules['tgl_nonaktif'] = ['required', 'date'];
         }
 
         $messages = [
             'user_id_ussi.regex' => 'User ID hanya boleh berisi huruf, angka, underscore, dan strip.',
-            'tgl_selesai.after' => 'Tanggal selesai harus setelah tanggal mulai.',
-            'atasan_id.required' => 'Atasan wajib dipilih.',
+            'tgl_selesai.after'  => 'Tanggal selesai harus setelah tanggal mulai.',
         ];
 
         $request->validate($rules, $messages);

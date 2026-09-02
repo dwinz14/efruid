@@ -27,6 +27,16 @@
                         <input name="urutan" type="number" value="{{ old('urutan', 50) }}" class="input w-20"
                             min="0" max="999" required>
                     </div>
+                    <div>
+                        <label class="label label-required">Level Hierarki</label>
+                        <select name="level" class="input w-52" required>
+                            @foreach (\App\Models\Jabatan::LEVEL_LABELS as $val => $label)
+                                <option value="{{ $val }}" @selected(old('level', 5) == $val)>
+                                    {{ $label }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
                     <button type="submit" class="btn-primary">Tambah</button>
                 </form>
             </div>
@@ -46,6 +56,7 @@
                             <th style="width:50px">No</th>
                             <th>Nama Jabatan</th>
                             <th>Urutan</th>
+                            <th>Level</th>
                             <th>User</th>
                             <th>Status</th>
                             <th class="text-right">Aksi</th>
@@ -72,6 +83,13 @@
                                                 class="input w-56 text-sm" required>
                                             <input name="urutan" type="number" value="{{ $jabatan->urutan }}"
                                                 class="input w-16 text-sm" min="0">
+                                            <select name="level" class="input w-44 text-sm">
+                                                @foreach (\App\Models\Jabatan::LEVEL_LABELS as $val => $label)
+                                                    <option value="{{ $val }}" @selected($jabatan->level == $val)>
+                                                        {{ $label }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
                                             <select name="is_active" class="input w-24 text-sm">
                                                 <option value="1" @selected($jabatan->is_active)>
                                                     Aktif
@@ -90,6 +108,9 @@
                                 </td>
                                 <td x-show="!edit" class="text-sm text-slate-500">
                                     {{ $jabatan->urutan }}
+                                </td>
+                                <td x-show="!edit" class="text-xs text-slate-500">
+                                    {{ \App\Models\Jabatan::LEVEL_LABELS[$jabatan->level] ?? $jabatan->level }}
                                 </td>
                                 <td x-show="!edit" class="text-sm">
                                     {{ $jabatan->users_count }} user

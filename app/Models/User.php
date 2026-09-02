@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\RoleUser;
+use App\Models\Jabatan;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -112,5 +113,31 @@ class User extends Authenticatable
         return $this->signature_path
             ? route('signature.show', ['user' => $this->id])
             : null;
+    }
+
+    /**
+     * Level jabatan user saat ini.
+     * Fallback ke LEVEL_STAFF jika jabatan belum di-set.
+     */
+    public function getJabatanLevelAttribute(): int
+    {
+        return $this->jabatan?->level ?? Jabatan::LEVEL_STAFF;
+    }
+
+    /**
+     * Apakah user ini adalah Dirut berdasarkan level jabatan?
+     * Dipakai untuk routing approval — lebih akurat dari role check.
+     */
+    public function isDirutByJabatan(): bool
+    {
+        return $this->jabatan_level === Jabatan::LEVEL_DIRUT;
+    }
+
+    /**
+     * Apakah user ini memerlukan atasan dalam proses permohonan?
+     */
+    public function needsAtasan(): bool
+    {
+        return $this->jabatan?->needsAtasan() ?? true;
     }
 }
