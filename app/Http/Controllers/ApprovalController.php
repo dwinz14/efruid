@@ -82,6 +82,34 @@ class ApprovalController extends Controller
             ->with('success', 'Permohonan berhasil ditolak.');
     }
 
+    // ── Riwayat Aksi Atasan ───────────────────────────────────────────────────
+
+    public function atasanRiwayat(Request $request): View
+    {
+        $user = auth()->user();
+
+        $riwayat = \App\Models\Permohonan::with([
+            'pemohon',
+            'kantor',
+            'approvalLogs' => fn($q) => $q
+                ->where('user_id', $user->id)
+                ->whereIn('aksi', ['approved', 'rejected'])
+                ->latest()
+                ->limit(1),
+        ])
+            ->whereHas(
+                'approvalLogs',
+                fn($q) => $q
+                    ->where('user_id', $user->id)
+                    ->whereIn('aksi', ['approved', 'rejected'])
+            )
+            ->latest()
+            ->paginate(15)
+            ->withQueryString();
+
+        return view('approval.atasan.riwayat', compact('riwayat'));
+    }
+
     // ── Dashboard Dirut (Unified) ─────────────────────────────────────────
     // Menampilkan:
     //   1. PENDING_ATASAN di mana atasan_id = dirut.id (permohonan L3/L2)
@@ -194,6 +222,34 @@ class ApprovalController extends Controller
 
         return redirect()->route('approval.dirut.index')
             ->with('success', 'Permohonan berhasil ditolak.');
+    }
+
+    // ── Riwayat Aksi Dirut ────────────────────────────────────────────────────
+
+    public function dirutRiwayat(Request $request): View
+    {
+        $user = auth()->user();
+
+        $riwayat = \App\Models\Permohonan::with([
+            'pemohon',
+            'kantor',
+            'approvalLogs' => fn($q) => $q
+                ->where('user_id', $user->id)
+                ->whereIn('aksi', ['approved', 'rejected'])
+                ->latest()
+                ->limit(1),
+        ])
+            ->whereHas(
+                'approvalLogs',
+                fn($q) => $q
+                    ->where('user_id', $user->id)
+                    ->whereIn('aksi', ['approved', 'rejected'])
+            )
+            ->latest()
+            ->paginate(15)
+            ->withQueryString();
+
+        return view('approval.dirut.riwayat', compact('riwayat'));
     }
 
     // ── Revisi (dari halaman pemohon) ─────────────────────────────────────

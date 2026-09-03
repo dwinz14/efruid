@@ -541,7 +541,9 @@
                     {{ $p->nama_atasan_ttd ?? '( ________________ )' }}
                 </td>
                 @if ($isRangkap)
-                    <td class="ttd-name">FRANSISKA HENDRA</td>
+                    <td class="ttd-name">
+                        {{ $stampDirut ? $stampDirut['nama'] : '( ________________ )' }}
+                    </td>
                 @endif
             </tr>
         </table>
@@ -587,8 +589,20 @@
                 <td style="width:50%; vertical-align:bottom;">
                     <div class="doc-admin-box">
                         <div class="doc-admin-bar">Administrator Aplikasi USSI</div>
-                        <div class="doc-admin-space"></div>
-                        <div class="doc-admin-name">AGUS SETIAWAN</div>
+                        <div class="doc-admin-space" style="text-align:center;">
+                            @if ($ttdExecutor)
+                                <img src="{{ $ttdExecutor }}" class="ttd-img" alt="TTD Administrator USSI">
+                            @endif
+                            @if ($stampExecutor)
+                                <div class="ttd-stamp">
+                                    {{ $stampExecutor['timestamp'] }}<br>
+                                    <span class="ttd-stamp-hash">
+                                        {{ substr($stampExecutor['hash'], 0, 24) }}...
+                                    </span>
+                                </div>
+                            @endif
+                        </div>
+                        <div class="doc-admin-name">{{ $p->nama_executor ?? '( ________________ )' }}</div>
                     </div>
                 </td>
             </tr>

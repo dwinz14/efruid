@@ -24,3 +24,11 @@ Schedule::call(function () {
         ->where('read_at', '<', now()->subDays(90))
         ->delete();
 })->dailyAt('01:00')->name('clean-old-notifications')->withoutOverlapping();
+
+// Auto-release klaim IT yang sudah lebih dari 3 hari belum dieksekusi
+Schedule::call(function () {
+    \App\Models\Permohonan::where('status', \App\Enums\StatusPermohonan::PENDING_IT)
+        ->whereNotNull('executor_id')
+        ->where('claimed_at', '<', now()->subDays(3))
+        ->update(['executor_id' => null, 'claimed_at' => null]);
+})->dailyAt('02:00')->name('auto-release-stale-claims')->withoutOverlapping();

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
 use App\Enums\AksiAudit;
 use App\Enums\StatusPermohonan;
 use App\Jobs\GenerateFruidPdf;
@@ -20,8 +21,9 @@ class EksekusiController extends Controller
 
     public function index(Request $request): View
     {
-        $query = Permohonan::with(['pemohon', 'kantor'])
+        $query = Permohonan::with(['pemohon', 'kantor', 'executor'])
             ->where('status', StatusPermohonan::PENDING_IT)
+            ->orderByRaw('CASE WHEN executor_id = ? THEN 0 WHEN executor_id IS NULL THEN 1 ELSE 2 END', [auth()->id()])
             ->latest();
 
         if ($request->filled('kantor_id')) {
@@ -32,20 +34,21 @@ class EksekusiController extends Controller
             $query->where('jenis_permohonan', $request->jenis);
         }
 
-        $pending      = $query->paginate(10)->withQueryString();
-        $pendingCount = Permohonan::where('status', StatusPermohonan::PENDING_IT)->count();
+        $pending         = $query->paginate(10)->withQueryString();
+        $pendingCount    = Permohonan::where('status', StatusPermohonan::PENDING_IT)->count();
+        $myClaimedCount  = Permohonan::where('status', StatusPermohonan::PENDING_IT)
+            ->where('executor_id', auth()->id())
+            ->count();
 
-        // Untuk filter kantor
         $kantors = \App\Models\Kantor::where('is_active', true)->orderBy('nama')->get();
 
-        return view('eksekusi.index', compact('pending', 'pendingCount', 'kantors'));
+        return view('eksekusi.index', compact('pending', 'pendingCount', 'myClaimedCount', 'kantors'));
     }
 
     // ── Detail untuk IT Staff ─────────────────────────────────────────────
 
     public function show(Permohonan $permohonan): View
     {
-        // IT Staff bisa lihat semua PENDING_IT
         if (
             $permohonan->status !== StatusPermohonan::PENDING_IT
             && $permohonan->status !== StatusPermohonan::EXECUTED
@@ -53,9 +56,76 @@ class EksekusiController extends Controller
             abort(403, 'Permohonan ini tidak dalam status yang dapat diproses IT.');
         }
 
-        $permohonan->load('pemohon', 'kantor', 'atasan', 'approvalLogs.user');
+        $permohonan->load('pemohon', 'kantor', 'atasan', 'executor', 'approvalLogs.user');
 
         return view('eksekusi.show', compact('permohonan'));
+    }
+
+    // ── Klaim permohonan ──────────────────────────────────────────────────
+
+    public function claim(Request $request, Permohonan $permohonan): RedirectResponse
+    {
+        if ($permohonan->status !== StatusPermohonan::PENDING_IT) {
+            return back()->withErrors(['error' => 'Permohonan tidak dalam status PENDING IT.']);
+        }
+
+        if ($permohonan->isClaimed()) {
+            return back()->withErrors(['error' => 'Permohonan ini sudah diambil oleh anggota tim lain.']);
+        }
+
+        $user = auth()->user();
+
+        $permohonan->update([
+            'executor_id' => $user->id,
+            'claimed_at'  => now(),
+        ]);
+
+        AuditService::log(
+            AksiAudit::PERMOHONAN_CLAIMED,
+            $user->id,
+            $permohonan,
+            null,
+            ['executor' => $user->name],
+            $permohonan->nomor_dokumen,
+        );
+
+        return redirect()->route('eksekusi.show', $permohonan)
+            ->with('success', "Permohonan {$permohonan->nomor_dokumen} berhasil diambil. Silakan lakukan eksekusi.");
+    }
+
+    // ── Lepas klaim ───────────────────────────────────────────────────────
+
+    public function unclaim(Request $request, Permohonan $permohonan): RedirectResponse
+    {
+        if ($permohonan->status !== StatusPermohonan::PENDING_IT) {
+            return back()->withErrors(['error' => 'Permohonan tidak dalam status PENDING IT.']);
+        }
+
+        $user = auth()->user();
+
+        // Hanya pengklaim sendiri atau super_admin yang boleh lepas
+        if (! $permohonan->isClaimedBy($user->id) && ! $user->isSuperAdmin()) {
+            abort(403, 'Anda tidak berhak melepas klaim ini.');
+        }
+
+        $previousExecutor = $permohonan->executor?->name ?? 'N/A';
+
+        $permohonan->update([
+            'executor_id' => null,
+            'claimed_at'  => null,
+        ]);
+
+        AuditService::log(
+            AksiAudit::PERMOHONAN_UNCLAIMED,
+            $user->id,
+            $permohonan,
+            ['executor' => $previousExecutor],
+            null,
+            $permohonan->nomor_dokumen,
+        );
+
+        return redirect()->route('eksekusi.index')
+            ->with('success', "Klaim permohonan {$permohonan->nomor_dokumen} berhasil dilepas.");
     }
 
     // ── Eksekusi: tandai selesai + dispatch PDF job ───────────────────────
@@ -68,10 +138,47 @@ class EksekusiController extends Controller
 
         $executor = auth()->user();
 
-        // Update status
-        $permohonan->update(['status' => StatusPermohonan::EXECUTED]);
+        // Harus sudah diklaim oleh diri sendiri
+        if (! $permohonan->isClaimedBy($executor->id)) {
+            return back()->withErrors(['error' => 'Anda harus "Ambil" permohonan ini sebelum bisa mengeksekusi.']);
+        }
 
-        // Catat approval log
+        // ── Embed tanda tangan executor ───────────────────────────────────────
+        $ttdExecutorPath = null;
+        if ($executor->signature_path && Storage::exists($executor->signature_path)) {
+            $dest = "signatures/snapshots/{$permohonan->id}_executor.png";
+            Storage::copy($executor->signature_path, $dest);
+            $ttdExecutorPath = $dest;
+        }
+
+        // ── Generate verification stamp untuk Administrator USSI ──────────────
+        $timestamp = Carbon::now()->setTimezone('Asia/Jakarta')->format('d/m/Y H:i:s') . ' WIB';
+        $hashInput = implode('|', [
+            $permohonan->nomor_dokumen ?? $permohonan->id,
+            $executor->id,
+            'Administrator USSI',
+            $timestamp,
+        ]);
+        $stampExecutor = [
+            'role'      => 'Administrator USSI',
+            'nama'      => $executor->name,
+            'jabatan'   => $executor->jabatan_label ?? 'IT Staff',
+            'timestamp' => $timestamp,
+            'hash'      => hash('sha256', $hashInput),
+        ];
+
+        $stamps   = $permohonan->verification_stamps ?? [];
+        $stamps[] = $stampExecutor;
+
+        // ── Update permohonan ─────────────────────────────────────────────────
+        $permohonan->update([
+            'status'              => StatusPermohonan::EXECUTED,
+            'nama_executor'       => $executor->name,
+            'ttd_executor_path'   => $ttdExecutorPath,
+            'verification_stamps' => $stamps,
+        ]);
+
+        // ── Catat approval log ────────────────────────────────────────────────
         ApprovalLog::create([
             'permohonan_id' => $permohonan->id,
             'user_id'       => $executor->id,
@@ -91,11 +198,26 @@ class EksekusiController extends Controller
             $permohonan->nomor_dokumen,
         );
 
-        // Dispatch PDF generation ke queue
         GenerateFruidPdf::dispatch($permohonan->id, $executor->id);
 
         return redirect()->route('eksekusi.index')
             ->with('success', "Permohonan {$permohonan->nomor_dokumen} berhasil dieksekusi. PDF sedang digenerate.");
+    }
+
+    // ── Riwayat Eksekusi IT ───────────────────────────────────────────────────
+
+    public function riwayat(Request $request): View
+    {
+        $user = auth()->user();
+
+        $riwayat = Permohonan::with(['pemohon', 'kantor'])
+            ->where('executor_id', $user->id)
+            ->where('status', StatusPermohonan::EXECUTED)
+            ->latest()
+            ->paginate(15)
+            ->withQueryString();
+
+        return view('eksekusi.riwayat', compact('riwayat'));
     }
 
     // ── Download PDF ──────────────────────────────────────────────────────
@@ -104,7 +226,6 @@ class EksekusiController extends Controller
     {
         $user = auth()->user();
 
-        // Hanya pemohon sendiri, IT staff, atau super admin yang bisa download
         $boleh = $user->id === $permohonan->pemohon_id
             || $user->isItStaff()
             || $user->isSuperAdmin();
@@ -114,7 +235,6 @@ class EksekusiController extends Controller
         }
 
         if (! $permohonan->pdf_path || ! Storage::exists($permohonan->pdf_path)) {
-            // PDF belum selesai digenerate
             return back()->withErrors([
                 'error' => 'PDF belum tersedia. Mungkin masih dalam proses generate, coba beberapa saat lagi.'
             ]);

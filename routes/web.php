@@ -1,12 +1,19 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
+
+Route::get('/', function () {
+    if (Auth::check()) {
+        return redirect()->route('dashboard');
+    }
+
+    return redirect()->route('login');
+});
 
 Route::get('/dashboard', App\Http\Controllers\DashboardController::class)
     ->middleware(['auth', 'email.verified'])
     ->name('dashboard');
-
-
 
 require __DIR__ . '/auth.php';
 
@@ -147,9 +154,11 @@ Route::middleware(['auth', 'email.verified', 'role:super_admin'])
     });
 
 // Approval Atasan
-Route::middleware('role:atasan')->group(function () {
+Route::middleware(['auth', 'email.verified', 'role:atasan'])->group(function () {
     Route::get('/approval/atasan', [App\Http\Controllers\ApprovalController::class, 'atasanIndex'])
         ->name('approval.atasan.index');
+    Route::get('/approval/atasan/riwayat', [App\Http\Controllers\ApprovalController::class, 'atasanRiwayat'])
+        ->name('approval.atasan.riwayat');
     Route::get('/approval/atasan/{permohonan}', [App\Http\Controllers\ApprovalController::class, 'atasanShow'])
         ->name('approval.atasan.show');
     Route::post('/approval/atasan/{permohonan}/approve', [App\Http\Controllers\ApprovalController::class, 'atasanApprove'])
@@ -159,30 +168,18 @@ Route::middleware('role:atasan')->group(function () {
 });
 
 // Approval Dirut
-Route::middleware('role:dirut')->group(function () {
+Route::middleware(['auth', 'email.verified', 'role:dirut'])->group(function () {
     Route::get('/approval/dirut', [App\Http\Controllers\ApprovalController::class, 'dirutIndex'])
         ->name('approval.dirut.index');
+    Route::get('/approval/dirut/riwayat', [App\Http\Controllers\ApprovalController::class, 'dirutRiwayat'])
+        ->name('approval.dirut.riwayat');
     Route::get('/approval/dirut/{permohonan}', [App\Http\Controllers\ApprovalController::class, 'dirutShow'])
         ->name('approval.dirut.show');
-
-    // Approve sebagai atasan (permohonan L3/L2)
-    Route::post(
-        '/approval/dirut/{permohonan}/approve-as-atasan',
-        [App\Http\Controllers\ApprovalController::class, 'dirutApproveAsAtasan']
-    )
+    Route::post('/approval/dirut/{permohonan}/approve-as-atasan', [App\Http\Controllers\ApprovalController::class, 'dirutApproveAsAtasan'])
         ->name('approval.dirut.approveAsAtasan');
-
-    // Approve sebagai Dirut (permohonan rangkap PENDING_DIRUT)
-    Route::post(
-        '/approval/dirut/{permohonan}/approve',
-        [App\Http\Controllers\ApprovalController::class, 'dirutApprove']
-    )
+    Route::post('/approval/dirut/{permohonan}/approve', [App\Http\Controllers\ApprovalController::class, 'dirutApprove'])
         ->name('approval.dirut.approve');
-
-    Route::post(
-        '/approval/dirut/{permohonan}/reject',
-        [App\Http\Controllers\ApprovalController::class, 'dirutReject']
-    )
+    Route::post('/approval/dirut/{permohonan}/reject', [App\Http\Controllers\ApprovalController::class, 'dirutReject'])
         ->name('approval.dirut.reject');
 });
 
@@ -190,8 +187,14 @@ Route::middleware('role:dirut')->group(function () {
 Route::middleware(['auth', 'email.verified', 'role:it_staff'])->group(function () {
     Route::get('/eksekusi', [App\Http\Controllers\EksekusiController::class, 'index'])
         ->name('eksekusi.index');
+    Route::get('/eksekusi/riwayat', [App\Http\Controllers\EksekusiController::class, 'riwayat'])
+        ->name('eksekusi.riwayat');
     Route::get('/eksekusi/{permohonan}', [App\Http\Controllers\EksekusiController::class, 'show'])
         ->name('eksekusi.show');
     Route::post('/eksekusi/{permohonan}/execute', [App\Http\Controllers\EksekusiController::class, 'execute'])
         ->name('eksekusi.execute');
+    Route::post('/eksekusi/{permohonan}/claim', [App\Http\Controllers\EksekusiController::class, 'claim'])
+        ->name('eksekusi.claim');
+    Route::post('/eksekusi/{permohonan}/unclaim', [App\Http\Controllers\EksekusiController::class, 'unclaim'])
+        ->name('eksekusi.unclaim');
 });

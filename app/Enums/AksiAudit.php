@@ -24,6 +24,8 @@ enum AksiAudit: string
     case PERMOHONAN_REJECTED  = 'permohonan.rejected';
     case PERMOHONAN_REVISED   = 'permohonan.revised';
     case PERMOHONAN_EXECUTED  = 'permohonan.executed';
+    case PERMOHONAN_CLAIMED   = 'permohonan.claimed';
+    case PERMOHONAN_UNCLAIMED = 'permohonan.unclaimed';
 
         // PDF
     case PDF_GENERATED        = 'pdf.generated';
@@ -48,6 +50,8 @@ enum AksiAudit: string
             self::PERMOHONAN_REJECTED  => 'Permohonan ditolak',
             self::PERMOHONAN_REVISED   => 'Permohonan direvisi',
             self::PERMOHONAN_EXECUTED  => 'Permohonan dieksekusi',
+            self::PERMOHONAN_CLAIMED   => 'Permohonan diklaim IT',
+            self::PERMOHONAN_UNCLAIMED => 'Klaim permohonan dilepas',
             self::PDF_GENERATED        => 'PDF digenerate',
         };
     }
