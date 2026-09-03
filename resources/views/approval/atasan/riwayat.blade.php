@@ -50,7 +50,7 @@
                                 <th>Aksi Saya</th>
                                 <th>Status Akhir</th>
                                 <th>Tanggal Aksi</th>
-                                <th class="text-right">Detail</th>
+                                <th class="text-right">Lihat</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -90,10 +90,28 @@
                                         {{ $log?->created_at->locale('id')->isoFormat('D MMM Y, HH:mm') ?? '—' }}
                                     </td>
                                     <td class="text-right">
-                                        <a href="{{ route('approval.atasan.show', $item) }}"
-                                            class="btn-ghost btn-sm text-slate-500">
+                                        {{-- Tombol trigger modal preview dokumen --}}
+                                        <button type="button"
+                                            @click="$dispatch('buka-dokumen-modal', {
+                                                previewUrl:    '{{ route('dokumen.preview', $item) }}',
+                                                nomorDokumen:  '{{ $item->nomor_dokumen }}',
+                                                pemohon:       '{{ $item->pemohon?->name }}',
+                                                status:        '{{ $item->status->label() }}',
+                                                statusClass:   '{{ $item->status->badgeClass() }}'
+                                            })"
+                                            class="inline-flex items-center gap-1.5 btn-ghost btn-sm text-slate-500
+                                                   hover:text-slate-800"
+                                            title="Lihat dokumen FRUID">
+                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                                stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943
+                                                                           9.542 7-1.274 4.057-5.064 7-9.542 7-4.477
+                                                                           0-8.268-2.943-9.542-7z" />
+                                            </svg>
                                             Lihat
-                                        </a>
+                                        </button>
                                     </td>
                                 </tr>
                             @endforeach
@@ -115,4 +133,8 @@
         </div>
 
     </div>
+
+    {{-- Modal preview dokumen FRUID (read-only) --}}
+    @include('approval.partials.dokumen-modal')
+
 @endsection
