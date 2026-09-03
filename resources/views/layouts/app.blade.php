@@ -344,6 +344,21 @@
                 @endif
 
                 @yield('content')
+
+                <footer class="mt-auto border-t border-slate-200/80">
+                    <div class="flex items-center justify-between px-6 py-3 text-xs text-slate-400">
+                        <span>&copy; {{ date('Y') }} LilMors</span>
+
+                        <div class="flex items-center gap-3">
+                            <span>v1.0.0</span>
+                            <span class="flex items-center gap-1.5">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                EFRUID
+                            </span>
+                        </div>
+                    </div>
+                </footer>
+
             </main>
         </div>
     </div>
