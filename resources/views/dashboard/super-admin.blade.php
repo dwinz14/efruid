@@ -189,5 +189,117 @@
             </div>
         @endif
     </div>
+    {{-- ── Security Overview ── --}}
+    <div>
+        <div class="flex items-center justify-between mb-3">
+            <h3 class="text-base font-semibold text-slate-800">Security Overview</h3>
+            <a href="{{ route('admin.security.index') }}"
+                class="text-xs text-brand-600 hover:text-brand-700 font-medium">
+                Security Center →
+            </a>
+        </div>
 
+        {{-- Security KPI --}}
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
+            @php
+                $secItems = [
+                    [
+                        'label' => 'Online Sekarang',
+                        'value' => $securityKpi['online_now'],
+                        'color' => 'green',
+                        'link' => route('admin.sessions.index'),
+                    ],
+                    [
+                        'label' => 'Gagal Login Hari Ini',
+                        'value' => $securityKpi['failed_today'],
+                        'color' => $securityKpi['failed_today'] > 0 ? 'amber' : 'slate',
+                        'link' => route('admin.security.login-history'),
+                    ],
+                    [
+                        'label' => 'Akun Terkunci',
+                        'value' => $securityKpi['locked_accounts'],
+                        'color' => $securityKpi['locked_accounts'] > 0 ? 'red' : 'slate',
+                        'link' => route('admin.users.index', ['status' => 'locked']),
+                    ],
+                    [
+                        'label' => 'Akun Suspended',
+                        'value' => $securityKpi['suspended_accounts'],
+                        'color' => $securityKpi['suspended_accounts'] > 0 ? 'red' : 'slate',
+                        'link' => route('admin.users.index', ['status' => 'suspended']),
+                    ],
+                    [
+                        'label' => 'Pending Verifikasi',
+                        'value' => $securityKpi['pending_verify'],
+                        'color' => $securityKpi['pending_verify'] > 0 ? 'amber' : 'slate',
+                        'link' => route('admin.users.pending'),
+                    ],
+                    [
+                        'label' => 'User Aktif',
+                        'value' => $securityKpi['total_users'],
+                        'color' => 'brand',
+                        'link' => route('admin.users.index'),
+                    ],
+                ];
+                $secColor = [
+                    'green' => ['num' => 'text-green-700', 'bg' => 'bg-green-50', 'border' => 'border-green-200'],
+                    'amber' => ['num' => 'text-amber-700', 'bg' => 'bg-amber-50', 'border' => 'border-amber-200'],
+                    'red' => ['num' => 'text-red-700', 'bg' => 'bg-red-50', 'border' => 'border-red-200'],
+                    'brand' => ['num' => 'text-brand-700', 'bg' => 'bg-brand-50', 'border' => 'border-brand-200'],
+                    'slate' => ['num' => 'text-slate-700', 'bg' => 'bg-white', 'border' => 'border-surface-border'],
+                ];
+            @endphp
+            @foreach ($secItems as $item)
+                @php $c = $secColor[$item['color']]; @endphp
+                <a href="{{ $item['link'] }}"
+                    class="card card-body text-center py-3 border {{ $c['border'] }} {{ $c['bg'] }} hover:shadow-card-hover transition-shadow">
+                    <p class="text-2xl font-bold {{ $c['num'] }}">{{ $item['value'] }}</p>
+                    <p class="text-xs text-slate-500 mt-0.5 leading-tight">{{ $item['label'] }}</p>
+                </a>
+            @endforeach
+        </div>
+
+        {{-- Recent Security Events --}}
+        <div class="card">
+            <div class="card-header flex items-center justify-between">
+                <h3 class="text-sm font-semibold text-slate-800">Event Keamanan Terbaru</h3>
+                <a href="{{ route('admin.security.login-history') }}"
+                    class="text-xs text-brand-600 hover:text-brand-700 font-medium">Lihat semua</a>
+            </div>
+            @if ($recentSecurityEvents->isEmpty())
+                <div class="card-body text-center py-8">
+                    <p class="text-sm text-slate-400">Tidak ada event keamanan.</p>
+                </div>
+            @else
+                <div class="divide-y divide-surface-border">
+                    @foreach ($recentSecurityEvents as $event)
+                        @php
+                            $isAlert = in_array($event->aksi->value, [
+                                \App\Enums\AksiAudit::USER_LOGIN_FAILED->value,
+                                \App\Enums\AksiAudit::USER_ACCOUNT_LOCKED->value,
+                                \App\Enums\AksiAudit::USER_SUSPENDED->value,
+                                \App\Enums\AksiAudit::USER_FORCE_LOGOUT->value,
+                            ]);
+                        @endphp
+                        <div class="px-4 py-3 flex items-center gap-3">
+                            <div
+                                class="w-2 h-2 rounded-full flex-shrink-0 {{ $isAlert ? 'bg-red-400' : 'bg-green-400' }}">
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-medium text-slate-800">{{ $event->aksi->label() }}</p>
+                                <p class="text-xs text-slate-400">
+                                    {{ $event->user?->name ?? 'System' }}
+                                    @if ($event->ip_address)
+                                        · <span class="font-mono">{{ $event->ip_address }}</span>
+                                    @endif
+                                </p>
+                            </div>
+                            <p class="text-xs text-slate-400 whitespace-nowrap flex-shrink-0">
+                                {{ $event->created_at->locale('id')->diffForHumans() }}
+                            </p>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+        </div>
+    </div>
 </div>

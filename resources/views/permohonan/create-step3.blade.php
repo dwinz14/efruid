@@ -12,18 +12,20 @@
 
             {{-- Warning jika belum ada TTD --}}
             @if (!$user->signature_path)
-                <div class="alert-warning">
+                <div class="alert-danger">
                     <svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd"
-                            d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                            clip-rule="evenodd" />
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586
+                               10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0
+                               001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586
+                               8.707 7.293z" clip-rule="evenodd" />
                     </svg>
                     <div>
                         <p class="font-medium">Tanda tangan digital belum ada</p>
                         <p class="text-sm mt-0.5">
-                            Anda dapat tetap submit, namun disarankan untuk
-                            <a href="{{ route('profile.edit') }}#signature" target="_blank"
-                                class="underline font-medium">upload tanda tangan</a> terlebih dahulu.
+                            Anda harus
+                            <a href="{{ route('profile.edit') }}" target="_blank" class="underline font-medium">upload tanda
+                                tangan di halaman Profil</a>
+                            sebelum dapat submit permohonan.
                         </p>
                     </div>
                 </div>
@@ -66,7 +68,8 @@
                     @submit="loading = true">
                     @csrf
                     <input type="hidden" name="permohonan_id" value="{{ $permohonan->id }}">
-                    <button type="submit" class="btn-primary btn-lg" :disabled="loading">
+                    <button type="submit" class="btn-primary btn-lg" :disabled="loading"
+                        @if (!$user->signature_path) disabled title="Upload tanda tangan terlebih dahulu" @endif>
                         <svg x-show="loading" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
                                 stroke-width="4" />

@@ -548,81 +548,83 @@
             </tr>
         </table>
 
-        {{-- Section bar: IT --}}
-        <table class="doc-table doc-table-bordered doc-table-bt-none doc-bar" style="margin-top:8px">
-            <tr>
-                <td>Diisi oleh Administrator Aplikasi USSI</td>
-            </tr>
-        </table>
+        @if ($isExecuted)
 
-        {{-- Data IT --}}
-        <table class="doc-table doc-table-bordered doc-table-bt-none doc-data" style="margin-bottom:10px">
-            <tr>
-                <td class="col-label">User Id</td>
-                <td class="col-sep">:</td>
-                <td class="col-value">{{ $p->user_id_ussi }}</td>
-            </tr>
-            <tr class="row-border">
-                <td class="col-label">Jabatan</td>
-                <td class="col-sep">:</td>
-                <td class="col-value">{{ $p->jabatan_pemohon }}</td>
-            </tr>
-            <tr class="row-border">
-                <td class="col-label">Access Level</td>
-                <td class="col-sep">:</td>
-                <td class="col-value">{{ $p->access_level?->value }}</td>
-            </tr>
-        </table>
+            {{-- Section bar: IT --}}
+            <table class="doc-table doc-table-bordered doc-table-bt-none doc-bar" style="margin-top:8px">
+                <tr>
+                    <td>Diisi oleh Administrator Aplikasi USSI</td>
+                </tr>
+            </table>
 
-        {{-- Kota, tanggal, TTD admin --}}
-        <table class="doc-table">
-            <tr>
-                {{-- TANGGAL DI KANAN, TETAP DI ATAS --}}
-                <td style="width:50%; text-align:right; vertical-align:top;">
-                    <p style="font-size:11.5px; margin:0 0 6px 0;">
-                        {{ $kotaLabel }}&nbsp;,&nbsp;{{ $tgl }}
-                    </p>
-                </td>
-            </tr>
-            <tr>
-                {{-- ADMIN BOX DI KIRI --}}
-                <td style="width:50%; vertical-align:bottom;">
-                    <div class="doc-admin-box">
-                        <div class="doc-admin-bar">Administrator Aplikasi USSI</div>
-                        <div class="doc-admin-space" style="text-align:center;">
-                            @if ($ttdExecutor)
-                                <img src="{{ $ttdExecutor }}" class="ttd-img" alt="TTD Administrator USSI">
-                            @endif
-                            @if ($stampExecutor)
-                                <div class="ttd-stamp">
-                                    {{ $stampExecutor['timestamp'] }}<br>
-                                    <span class="ttd-stamp-hash">
-                                        {{ substr($stampExecutor['hash'], 0, 24) }}...
-                                    </span>
-                                </div>
-                            @endif
+            {{-- Data IT --}}
+            <table class="doc-table doc-table-bordered doc-table-bt-none doc-data" style="margin-bottom:10px">
+                <tr>
+                    <td class="col-label">User Id</td>
+                    <td class="col-sep">:</td>
+                    <td class="col-value">{{ $p->user_id_ussi }}</td>
+                </tr>
+                <tr class="row-border">
+                    <td class="col-label">Jabatan</td>
+                    <td class="col-sep">:</td>
+                    <td class="col-value">{{ $p->jabatan_pemohon }}</td>
+                </tr>
+                <tr class="row-border">
+                    <td class="col-label">Access Level</td>
+                    <td class="col-sep">:</td>
+                    <td class="col-value">{{ $p->access_level?->value }}</td>
+                </tr>
+            </table>
+
+            {{-- Kota, tanggal, TTD admin --}}
+            <table class="doc-table">
+                <tr>
+                    <td style="width:50%; text-align:right; vertical-align:top;">
+                        <p style="font-size:11.5px; margin:0 0 6px 0;">
+                            {{ $kotaLabel }}&nbsp;,&nbsp;{{ $tgl }}
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="width:50%; vertical-align:bottom;">
+                        <div class="doc-admin-box">
+                            <div class="doc-admin-bar">Administrator Aplikasi USSI</div>
+                            <div class="doc-admin-space" style="text-align:center;">
+                                @if ($ttdExecutor)
+                                    <img src="{{ $ttdExecutor }}" class="ttd-img" alt="TTD Administrator USSI">
+                                @endif
+                                @if ($stampExecutor)
+                                    <div class="ttd-stamp">
+                                        {{ $stampExecutor['timestamp'] }}<br>
+                                        <span class="ttd-stamp-hash">
+                                            {{ substr($stampExecutor['hash'], 0, 24) }}...
+                                        </span>
+                                    </div>
+                                @endif
+                            </div>
+                            <div class="doc-admin-name">{{ $p->nama_executor ?? '( ________________ )' }}</div>
                         </div>
-                        <div class="doc-admin-name">{{ $p->nama_executor ?? '( ________________ )' }}</div>
-                    </div>
-                </td>
-            </tr>
-        </table>
+                    </td>
+                </tr>
+            </table>
 
-        {{-- ── VERIFICATION RECORD ── --}}
-        @if (count($stamps) > 0)
-            <div class="doc-vr-section">
-                <div class="doc-vr-title">Verification Record &mdash; eFRUID System</div>
-                @foreach ($stamps as $stamp)
-                    <div class="doc-vr-box">
-                        <strong>{{ $stamp['role'] }}</strong>:
-                        {{ $stamp['nama'] }}
-                        ({{ $stamp['jabatan'] }})
-                        <br>
-                        Disetujui: {{ $stamp['timestamp'] }}<br>
-                        <span class="doc-vr-hash">SHA256: {{ $stamp['hash'] }}</span>
-                    </div>
-                @endforeach
-            </div>
+            {{-- ── VERIFICATION RECORD ── --}}
+            @if (count($stamps) > 0)
+                <div class="doc-vr-section">
+                    <div class="doc-vr-title">Verification Record &mdash; eFRUID System</div>
+                    @foreach ($stamps as $stamp)
+                        <div class="doc-vr-box">
+                            <strong>{{ $stamp['role'] }}</strong>:
+                            {{ $stamp['nama'] }}
+                            ({{ $stamp['jabatan'] }})
+                            <br>
+                            Disetujui: {{ $stamp['timestamp'] }}<br>
+                            <span class="doc-vr-hash">SHA256: {{ $stamp['hash'] }}</span>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+
         @endif
 
     </div>

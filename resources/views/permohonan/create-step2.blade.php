@@ -49,18 +49,11 @@
 
                     {{-- Kantor --}}
                     <div>
-                        <label class="label label-required">Kantor</label>
-                        <select name="kantor_id" class="input @error('kantor_id') input-error @enderror" required>
-                            <option value="">— Pilih Kantor —</option>
-                            @foreach ($kantors as $kantor)
-                                <option value="{{ $kantor->id }}" @selected(old('kantor_id', $draft?->kantor_id ?? $user->kantor_id) == $kantor->id)>
-                                    {{ $kantor->label }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('kantor_id')
-                            <p class="field-error">{{ $message }}</p>
-                        @enderror
+                        <label class="label">Kantor</label>
+                        <input type="text" value="{{ $user->kantor?->label ?? '—' }}"
+                            class="input bg-slate-50 text-slate-500 cursor-not-allowed" readonly>
+                        <input type="hidden" name="kantor_id" value="{{ $user->kantor_id }}">
+                        <p class="mt-1 text-xs text-slate-400">Diisi otomatis sesuai kantor Anda</p>
                     </div>
 
                     {{-- Nama — dari profil, read only --}}
@@ -85,15 +78,16 @@
                     </div>
 
                     {{-- User ID USSI --}}
+                    @php
+                        $nik = $user->nik; // contoh: AP123456789
+                        $derivedUserId = strlen($nik) > 3 ? substr($nik, 0, 2) . substr($nik, 5) : $nik;
+                        $displayUserId = old('user_id_ussi', $draft?->user_id_ussi ?? $derivedUserId);
+                    @endphp
                     <div>
-                        <label class="label label-required">User ID (USSI)</label>
-                        <input name="user_id_ussi" type="text"
-                            value="{{ old('user_id_ussi', $draft?->user_id_ussi ?? $user->nik) }}"
-                            class="input font-mono @error('user_id_ussi') input-error @enderror"
-                            placeholder="Contoh: AP000123456" maxlength="30" required>
-                        @error('user_id_ussi')
-                            <p class="field-error">{{ $message }}</p>
-                        @enderror
+                        <label class="label">User ID (USSI)</label>
+                        <input type="text" value="{{ $displayUserId }}"
+                            class="input font-mono bg-slate-50 text-slate-500 cursor-not-allowed" readonly>
+                        <input type="hidden" name="user_id_ussi" value="{{ $displayUserId }}">
                     </div>
 
                     {{-- Atasan --}}
@@ -107,8 +101,8 @@
                             <div class="alert-info">
                                 <svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0
-                                 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001
-                                 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                                                         11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001
+                                                         1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
                                 </svg>
                                 <span>
                                     Sebagai Direktur Utama, permohonan Anda akan langsung
@@ -121,10 +115,10 @@
                             <div class="alert-warning">
                                 <svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58
-                                 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53
-                                 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0
-                                 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0
-                                 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                                         9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53
+                                                         0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0
+                                                         11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0
+                                                         002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
                                 </svg>
                                 <span>
                                     Belum ada atasan yang tersedia untuk level jabatan Anda
@@ -184,21 +178,69 @@
                     <div x-show="isPerubahan" x-transition class="space-y-4 pt-2">
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
-                                <label class="label label-required">Jabatan Sekarang</label>
-                                <input name="jabatan_lama" type="text"
-                                    value="{{ old('jabatan_lama', $draft?->jabatan_lama) }}"
-                                    class="input @error('jabatan_lama') input-error @enderror" :required="isPerubahan">
-                                @error('jabatan_lama')
-                                    <p class="field-error">{{ $message }}</p>
-                                @enderror
+                                <label class="label">Jabatan Sekarang</label>
+                                <input type="text" value="{{ $user->jabatan_label }}"
+                                    class="input bg-slate-50 text-slate-500 cursor-not-allowed" readonly>
+                                <input type="hidden" name="jabatan_lama" value="{{ $user->jabatan_label }}">
+                                <p class="mt-1 text-xs text-slate-400">Diisi otomatis dari profil Anda</p>
                             </div>
-                            <div>
+                            @php
+                                $jabatanGroups = $jabatans->groupBy('level');
+                                $levelLabels = [
+                                    1 => 'Direktur Utama',
+                                    2 => 'Direktur',
+                                    3 => 'Kepala Bagian / Pimpinan Cabang',
+                                    4 => 'Kasie / Kepala Unit',
+                                    5 => 'Staff & Pelaksana',
+                                ];
+                                $oldJabatanBaru = old('jabatan_baru', $draft?->jabatan_baru ?? '');
+                                $jabatanNamaList = $jabatans->pluck('nama')->toArray();
+                                // Cek apakah nilai lama ada di daftar resmi atau bukan (berarti "Lainnya" custom)
+                                $isCustomJabatan =
+                                    $oldJabatanBaru !== '' && !in_array($oldJabatanBaru, $jabatanNamaList);
+                                $selectValue = $isCustomJabatan ? 'LAINNYA' : $oldJabatanBaru;
+                            @endphp
+
+                            <div x-data="{
+                                jabatanBaru: '{{ $selectValue }}',
+                                jabatanCustom: '{{ $isCustomJabatan ? $oldJabatanBaru : '' }}',
+                                get isLainnya() { return this.jabatanBaru === 'LAINNYA'; },
+                                get finalValue() { return this.isLainnya ? this.jabatanCustom : this.jabatanBaru; }
+                            }">
                                 <label class="label label-required">
                                     {{ $formType === 'rangkap' ? 'Jabatan yang Dirangkap' : 'Jabatan Baru' }}
                                 </label>
-                                <input name="jabatan_baru" type="text"
-                                    value="{{ old('jabatan_baru', $draft?->jabatan_baru) }}"
-                                    class="input @error('jabatan_baru') input-error @enderror" :required="isPerubahan">
+
+                                {{-- Select dropdown jabatan --}}
+                                <select x-model="jabatanBaru" class="input @error('jabatan_baru') input-error @enderror"
+                                    :required="isPerubahan">
+                                    <option value="">— Pilih Jabatan —</option>
+                                    @foreach ($jabatanGroups->sortKeys() as $level => $items)
+                                        @if (isset($levelLabels[$level]))
+                                            <optgroup label="{{ $levelLabels[$level] }}">
+                                                @foreach ($items->sortBy('urutan') as $jab)
+                                                    <option value="{{ $jab->nama }}" @selected($selectValue === $jab->nama)>
+                                                        {{ $jab->nama }}
+                                                    </option>
+                                                @endforeach
+                                            </optgroup>
+                                        @endif
+                                    @endforeach
+                                </select>
+
+                                {{-- Input custom jika pilih LAINNYA --}}
+                                <div x-show="isLainnya" x-transition class="mt-2">
+                                    <input x-model="jabatanCustom" type="text"
+                                        class="input @error('jabatan_baru') input-error @enderror"
+                                        placeholder="Tuliskan jabatan secara lengkap..." maxlength="150"
+                                        :required="isPerubahan && isLainnya">
+                                    <p class="mt-1 text-xs text-slate-400">Isi jabatan yang tidak ada di daftar di atas.
+                                    </p>
+                                </div>
+
+                                {{-- Hidden field yang dikirim ke server — selalu berisi nilai final --}}
+                                <input type="hidden" name="jabatan_baru" :value="finalValue">
+
                                 @error('jabatan_baru')
                                     <p class="field-error">{{ $message }}</p>
                                 @enderror
@@ -249,6 +291,7 @@
                             <label class="label label-required">Mulai Berlaku</label>
                             <input type="date" name="tgl_permanen"
                                 value="{{ old('tgl_permanen', $draft?->tgl_permanen?->format('Y-m-d')) }}"
+                                min="{{ today()->format('Y-m-d') }}"
                                 class="input w-48 @error('tgl_permanen') input-error @enderror" :required="isPermanen">
                             @error('tgl_permanen')
                                 <p class="field-error">{{ $message }}</p>
@@ -261,6 +304,7 @@
                                 <label class="label label-required">Mulai Tanggal</label>
                                 <input type="date" name="tgl_mulai"
                                     value="{{ old('tgl_mulai', $draft?->tgl_mulai?->format('Y-m-d')) }}"
+                                    min="{{ today()->format('Y-m-d') }}"
                                     class="input @error('tgl_mulai') input-error @enderror" :required="isSementara">
                                 @error('tgl_mulai')
                                     <p class="field-error">{{ $message }}</p>
@@ -270,6 +314,7 @@
                                 <label class="label label-required">Sampai Tanggal</label>
                                 <input type="date" name="tgl_selesai"
                                     value="{{ old('tgl_selesai', $draft?->tgl_selesai?->format('Y-m-d')) }}"
+                                    min="{{ today()->addDay()->format('Y-m-d') }}"
                                     class="input @error('tgl_selesai') input-error @enderror" :required="isSementara">
                                 @error('tgl_selesai')
                                     <p class="field-error">{{ $message }}</p>
@@ -283,6 +328,7 @@
                         <label class="label label-required">Mulai Tanggal Nonaktif</label>
                         <input type="date" name="tgl_nonaktif"
                             value="{{ old('tgl_nonaktif', $draft?->tgl_nonaktif?->format('Y-m-d')) }}"
+                            min="{{ today()->format('Y-m-d') }}"
                             class="input w-48 @error('tgl_nonaktif') input-error @enderror" :required="isNonaktif">
                         @error('tgl_nonaktif')
                             <p class="field-error">{{ $message }}</p>

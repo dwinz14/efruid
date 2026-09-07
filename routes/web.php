@@ -139,6 +139,10 @@ Route::middleware(['auth', 'email.verified', 'role:super_admin'])
         // Session Monitoring
         Route::get('/sessions',                         [App\Http\Controllers\Admin\SessionMonitorController::class, 'index'])
             ->name('sessions.index');
+        Route::get('/security', [App\Http\Controllers\Admin\SecurityCenterController::class, 'index'])
+            ->name('security.index');
+        Route::get('/security/login-history', [App\Http\Controllers\Admin\SecurityCenterController::class, 'loginHistory'])
+            ->name('security.login-history');
 
         // Kantors
         Route::get('/kantor', [App\Http\Controllers\Admin\KantorController::class, 'index'])

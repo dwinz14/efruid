@@ -186,17 +186,16 @@ class PermohonanController extends Controller
 
         $this->authorize('submit', $permohonan);
 
-        // Warning jika belum ada TTD (tidak blokir, hanya dicatat)
-        $noTtd = ! $user->signature_path;
+        // Block submit jika belum ada TTD
+        if (! $user->signature_path) {
+            return redirect()->back()
+                ->with('error', 'Anda belum memiliki tanda tangan digital. Silakan buat tanda tangan di halaman Profil sebelum submit permohonan.');
+        }
 
         $permohonan = $this->service->submit($permohonan, $user);
 
-        $message = $noTtd
-            ? 'Permohonan berhasil disubmit. Catatan: Anda belum memiliki tanda tangan digital di profil.'
-            : 'Permohonan berhasil disubmit dan menunggu persetujuan atasan.';
-
         return redirect()->route('permohonan.show', $permohonan)
-            ->with('success', $message);
+            ->with('success', 'Permohonan berhasil disubmit dan menunggu persetujuan atasan.');
     }
 
     // ── Simpan draft ──────────────────────────────────────────────────────
@@ -296,13 +295,28 @@ class PermohonanController extends Controller
 
     private function validateStep2(Request $request, bool $isDraft = false): mixed
     {
+
+        $request->merge(['kantor_id' => auth()->user()->kantor_id]);
+
+        if (empty($request->user_id_ussi) || $request->user_id_ussi === auth()->user()->nik) {
+            $nik = auth()->user()->nik;
+            $derived = strlen($nik) > 3
+                ? substr($nik, 0, 2) . substr($nik, 5) // AP + [skip 3 digit] + sisanya
+                : $nik;
+            $request->merge(['user_id_ussi' => $derived]);
+        }
+
+        // Trim jabatan_baru dari input custom (LAINNYA)
+        if ($request->filled('jabatan_baru')) {
+            $request->merge(['jabatan_baru' => strtoupper(trim($request->jabatan_baru))]);
+        }
+
         $rules = [
             'form_type'        => ['required', 'in:normal,rangkap'],
             'kantor_id'        => ['required', 'exists:kantors,id'],
             'user_id_ussi'     => ['required', 'string', 'max:30', 'regex:/^[A-Za-z0-9_\-]+$/'],
             'jenis_permohonan' => ['required', 'in:pendaftaran,perubahan,nonaktif'],
             'access_level'     => ['required', 'in:DIREKSI,ADMINISTRATOR,USER'],
-            // atasan_id nullable — Dirut tidak punya atasan
             'atasan_id'        => ['nullable', 'exists:users,id'],
         ];
 
@@ -312,21 +326,24 @@ class PermohonanController extends Controller
             $rules['jabatan_baru']   = ['required', 'string', 'max:150'];
 
             if ($request->tipe_perubahan === 'permanen') {
-                $rules['tgl_permanen'] = ['required', 'date'];
+                $rules['tgl_permanen'] = ['required', 'date', 'after_or_equal:today'];
             }
             if ($request->tipe_perubahan === 'sementara') {
-                $rules['tgl_mulai']   = ['required', 'date'];
+                $rules['tgl_mulai']   = ['required', 'date', 'after_or_equal:today'];
                 $rules['tgl_selesai'] = ['required', 'date', 'after:tgl_mulai'];
             }
         }
 
         if ($request->jenis_permohonan === 'nonaktif') {
-            $rules['tgl_nonaktif'] = ['required', 'date'];
+            $rules['tgl_nonaktif'] = ['required', 'date', 'after_or_equal:today'];
         }
 
         $messages = [
-            'user_id_ussi.regex' => 'User ID hanya boleh berisi huruf, angka, underscore, dan strip.',
-            'tgl_selesai.after'  => 'Tanggal selesai harus setelah tanggal mulai.',
+            'user_id_ussi.regex'         => 'User ID hanya boleh berisi huruf, angka, underscore, dan strip.',
+            'tgl_selesai.after'          => 'Tanggal selesai harus setelah tanggal mulai.',
+            'tgl_permanen.after_or_equal' => 'Tanggal tidak boleh di masa lalu.',
+            'tgl_mulai.after_or_equal'   => 'Tanggal mulai tidak boleh di masa lalu.',
+            'tgl_nonaktif.after_or_equal' => 'Tanggal nonaktif tidak boleh di masa lalu.',
         ];
 
         $request->validate($rules, $messages);

@@ -65,6 +65,7 @@ class DocumentRenderer
             'stampAtasan'   => $stampAtasan,
             'stampDirut'    => $stampDirut,
             'stampExecutor' => $stampExecutor,
+            'isExecuted' => $p->status === \App\Enums\StatusPermohonan::EXECUTED,
         ];
     }
 
