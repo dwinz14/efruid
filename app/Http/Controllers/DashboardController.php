@@ -4,18 +4,21 @@ namespace App\Http\Controllers;
 
 use App\Enums\StatusPermohonan;
 use App\Models\Permohonan;
+use App\Models\AuditLog;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\DB;
 
 
 class DashboardController extends Controller
 {
-       public function __invoke(): View
+    public function __invoke(): View
     {
         $user = auth()->user()->load('jabatan', 'kantor', 'roles');
 
         // Data spesifik per role — hanya load yang relevan
-        $data = match(true) {
+        $data = match (true) {
             $user->isSuperAdmin() => $this->superAdminData(),
             $user->isDirut()      => $this->dirutData($user),
             $user->isItStaff()    => $this->itStaffData(),
@@ -35,8 +38,8 @@ class DashboardController extends Controller
             ]);
 
         // Grafik 6 bulan terakhir
-        $bulanIni   = Carbon::now();
-        $chartData  = collect();
+        $bulanIni  = Carbon::now();
+        $chartData = collect();
         for ($i = 5; $i >= 0; $i--) {
             $bulan = $bulanIni->copy()->subMonths($i);
             $chartData->push([
@@ -57,7 +60,48 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
-        return compact('statuses', 'chartData', 'recentPermohonan');
+        // ── Security KPI ──────────────────────────────────────────────────────
+        $onlineThreshold = now()->subMinutes(5)->timestamp;
+
+        $securityKpi = [
+            'online_now'         => DB::table('sessions')
+                ->whereNotNull('user_id')
+                ->where('last_activity', '>=', $onlineThreshold)
+                ->count(),
+            'locked_accounts'    => User::whereNotNull('locked_at')->count(),
+            'suspended_accounts' => User::whereNotNull('suspended_at')->count(),
+            'pending_verify'     => User::where('email_verified', false)
+                ->where('is_active', true)
+                ->count(),
+            'failed_today'       => AuditLog::where('aksi', \App\Enums\AksiAudit::USER_LOGIN_FAILED->value)
+                ->whereDate('created_at', today())
+                ->count(),
+            'total_users'        => User::where('is_active', true)->count(),
+        ];
+
+        // 5 event security terbaru
+        $recentSecurityEvents = AuditLog::with('user')
+            ->whereIn('aksi', [
+                \App\Enums\AksiAudit::USER_LOGIN_FAILED->value,
+                \App\Enums\AksiAudit::USER_ACCOUNT_LOCKED->value,
+                \App\Enums\AksiAudit::USER_ACCOUNT_UNLOCKED->value,
+                \App\Enums\AksiAudit::USER_SUSPENDED->value,
+                \App\Enums\AksiAudit::USER_UNSUSPENDED->value,
+                \App\Enums\AksiAudit::USER_FORCE_LOGOUT->value,
+                \App\Enums\AksiAudit::USER_LOGOUT_ALL->value,
+                \App\Enums\AksiAudit::USER_MANUAL_VERIFIED->value,
+            ])
+            ->latest('created_at')
+            ->take(5)
+            ->get();
+
+        return compact(
+            'statuses',
+            'chartData',
+            'recentPermohonan',
+            'securityKpi',
+            'recentSecurityEvents'
+        );
     }
 
     // ── Dirut ─────────────────────────────────────────────────────────────
@@ -76,7 +120,9 @@ class DashboardController extends Controller
         $totalPending = $pendingAsAtasan + $pendingDirut;
 
         $recentApproved = Permohonan::with(['pemohon', 'kantor'])
-            ->whereHas('approvalLogs', fn($q) =>
+            ->whereHas(
+                'approvalLogs',
+                fn($q) =>
                 $q->where('user_id', $user->id)->where('aksi', 'approved')
             )
             ->latest()
