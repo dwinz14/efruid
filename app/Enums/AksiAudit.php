@@ -15,6 +15,17 @@ enum AksiAudit: string
     case USER_PASSWORD_RESET  = 'user.password_reset';
     case USER_SIGNATURE       = 'user.signature_uploaded';
     case USER_ROLE_ASSIGNED   = 'user.role_assigned';
+    case USER_CREATED           = 'user.created';
+    case USER_MANUAL_VERIFIED   = 'user.manual_verified';
+    case USER_ACTIVATED         = 'user.activated';
+    case USER_DEACTIVATED       = 'user.deactivated';
+    case USER_SUSPENDED         = 'user.suspended';
+    case USER_UNSUSPENDED       = 'user.unsuspended';
+    case USER_ACCOUNT_LOCKED    = 'user.account_locked';
+    case USER_ACCOUNT_UNLOCKED  = 'user.account_unlocked';
+    case USER_FORCE_LOGOUT      = 'user.force_logout';
+    case USER_LOGOUT_ALL        = 'user.logout_all';
+    case USER_REJECTED          = 'user.rejected';
 
         // Permohonan
     case PERMOHONAN_CREATED   = 'permohonan.created';
@@ -53,6 +64,17 @@ enum AksiAudit: string
             self::PERMOHONAN_CLAIMED   => 'Permohonan diklaim IT',
             self::PERMOHONAN_UNCLAIMED => 'Klaim permohonan dilepas',
             self::PDF_GENERATED        => 'PDF digenerate',
+            self::USER_CREATED          => 'User dibuat oleh admin',
+            self::USER_MANUAL_VERIFIED  => 'Verifikasi manual oleh admin',
+            self::USER_ACTIVATED        => 'Akun diaktifkan',
+            self::USER_DEACTIVATED      => 'Akun dinonaktifkan',
+            self::USER_SUSPENDED        => 'Akun disuspend',
+            self::USER_UNSUSPENDED      => 'Suspend akun dicabut',
+            self::USER_ACCOUNT_LOCKED   => 'Akun dikunci',
+            self::USER_ACCOUNT_UNLOCKED => 'Kunci akun dibuka',
+            self::USER_FORCE_LOGOUT     => 'Force logout oleh admin',
+            self::USER_LOGOUT_ALL       => 'Logout semua sesi oleh admin',
+            self::USER_REJECTED         => 'Registrasi ditolak oleh admin',
         };
     }
 }

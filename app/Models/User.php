@@ -28,6 +28,10 @@ class User extends Authenticatable
         'email_verified',
         'last_login_at',
         'last_login_ip',
+        'suspended_at',
+        'suspension_reason',
+        'failed_login_count',
+        'locked_at',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -37,6 +41,9 @@ class User extends Authenticatable
         'is_active'      => 'boolean',
         'email_verified' => 'boolean',
         'last_login_at'  => 'datetime',
+        'suspended_at'       => 'datetime',
+        'locked_at'          => 'datetime',
+        'failed_login_count' => 'integer',
     ];
 
     // ── Relationships ──
@@ -139,5 +146,33 @@ class User extends Authenticatable
     public function needsAtasan(): bool
     {
         return $this->jabatan?->needsAtasan() ?? true;
+    }
+
+    // Account state helpers 
+
+    public function isSuspended(): bool
+    {
+        return $this->suspended_at !== null;
+    }
+
+    public function isLocked(): bool
+    {
+        return $this->locked_at !== null;
+    }
+
+    public function accountStatus(): string
+    {
+        if ($this->isSuspended())       return 'SUSPENDED';
+        if ($this->isLocked())          return 'LOCKED';
+        if (! $this->email_verified)    return 'PENDING_VERIFICATION';
+        if (! $this->is_active)         return 'INACTIVE';
+        return 'ACTIVE';
+    }
+
+    public function canLogin(): bool
+    {
+        return $this->is_active
+            && ! $this->isSuspended()
+            && ! $this->isLocked();
     }
 }

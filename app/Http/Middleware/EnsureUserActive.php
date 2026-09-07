@@ -12,7 +12,30 @@ class EnsureUserActive
     {
         $user = $request->user();
 
-        if ($user && ! $user->is_active) {
+        if (! $user) {
+            return $next($request);
+        }
+
+        // Cek semua state blocking — logout dan redirect dengan pesan sesuai
+        if ($user->isSuspended()) {
+            auth()->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('login')
+                ->withErrors(['email' => 'Akun Anda telah disuspend. Hubungi administrator.']);
+        }
+
+        if ($user->isLocked()) {
+            auth()->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('login')
+                ->withErrors(['email' => 'Akun Anda terkunci. Hubungi administrator.']);
+        }
+
+        if (! $user->is_active) {
             auth()->logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();

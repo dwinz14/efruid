@@ -27,18 +27,17 @@ class AuthenticatedSessionController extends Controller
             'password' => ['required', 'string'],
         ]);
 
-        // Rate limiting: maks 5 attempt per email per menit
         $throttleKey = Str::lower($request->email) . '|' . $request->ip();
 
+        // ── Rate limiter check ────────────────────────────────────────────────
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
             $seconds = RateLimiter::availableIn($throttleKey);
 
-            // Audit login gagal karena throttle
             $user = \App\Models\User::where('email', $request->email)->first();
             if ($user) {
                 AuditService::auth(AksiAudit::USER_LOGIN_FAILED, $user->id, [
-                    'reason' => 'rate_limited',
-                    'retry_after_seconds' => $seconds,
+                    'reason'               => 'rate_limited',
+                    'retry_after_seconds'  => $seconds,
                 ]);
             }
 
@@ -47,13 +46,48 @@ class AuthenticatedSessionController extends Controller
             ]);
         }
 
-        if (! Auth::attempt($request->only('email', 'password'), $request->boolean('remember'))) {
-            RateLimiter::hit($throttleKey, 900); // lockout 15 menit setelah 5x gagal
+        // ── Cek account state sebelum attempt ────────────────────────────────
+        $user = \App\Models\User::where('email', $request->email)->first();
 
-            // Audit login gagal
-            $user = \App\Models\User::where('email', $request->email)->first();
+        if ($user && $user->isSuspended()) {
+            throw ValidationException::withMessages([
+                'email' => 'Akun Anda telah disuspend. Hubungi administrator.',
+            ]);
+        }
+
+        if ($user && $user->isLocked()) {
+            throw ValidationException::withMessages([
+                'email' => 'Akun Anda terkunci. Hubungi administrator untuk membuka kunci.',
+            ]);
+        }
+
+        // ── Attempt login ─────────────────────────────────────────────────────
+        if (! Auth::attempt($request->only('email', 'password'), $request->boolean('remember'))) {
+            RateLimiter::hit($throttleKey, 900);
+
             if ($user) {
-                AuditService::auth(AksiAudit::USER_LOGIN_FAILED, $user->id, ['reason' => 'wrong_password']);
+                $newCount = $user->failed_login_count + 1;
+                $updates  = ['failed_login_count' => $newCount];
+
+                // Lock akun jika mencapai threshold (5x gagal)
+                if ($newCount >= 5 && ! $user->isLocked()) {
+                    $updates['locked_at'] = now();
+
+                    AuditService::log(
+                        AksiAudit::USER_ACCOUNT_LOCKED,
+                        null,           // system action, bukan user action
+                        $user,
+                        ['locked_at' => null],
+                        ['locked_at' => now()->toDateTimeString(), 'reason' => 'failed_login_threshold'],
+                    );
+                }
+
+                $user->update($updates);
+
+                AuditService::auth(AksiAudit::USER_LOGIN_FAILED, $user->id, [
+                    'reason'             => 'wrong_password',
+                    'failed_login_count' => $newCount,
+                ]);
             }
 
             throw ValidationException::withMessages([
@@ -65,7 +99,6 @@ class AuthenticatedSessionController extends Controller
 
         $user = Auth::user();
 
-        // Cek apakah akun aktif
         if (! $user->is_active) {
             Auth::logout();
             throw ValidationException::withMessages([
@@ -75,15 +108,15 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        // Update last login
+        // Reset failed_login_count saat login berhasil
         $user->update([
-            'last_login_at' => now(),
-            'last_login_ip' => $request->ip(),
+            'last_login_at'      => now(),
+            'last_login_ip'      => $request->ip(),
+            'failed_login_count' => 0,
         ]);
 
         AuditService::auth(AksiAudit::USER_LOGIN, $user->id);
 
-        // Jika belum verifikasi email → ke halaman OTP
         if (! $user->email_verified) {
             return redirect()->route('verification.notice');
         }
