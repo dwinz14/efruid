@@ -15,7 +15,7 @@
     {{-- ── Wrapper Utama ── --}}
     <div class="flex h-full overflow-hidden">
 
-        {{-- Mobile Overlay dengan efek blur --}}
+        {{-- Mobile Overlay --}}
         <div x-show="sidebarOpen" x-transition:enter="transition-opacity ease-linear duration-300"
             x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
             x-transition:leave="transition-opacity ease-linear duration-300" x-transition:leave-start="opacity-100"
@@ -123,7 +123,7 @@
         {{-- ── Main Content Area ── --}}
         <div class="flex-1 flex flex-col min-w-0 bg-slate-50">
 
-            {{-- Topbar (Sticky dengan efek Glassmorphism) --}}
+            {{-- Topbar --}}
             <header
                 class="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200 shadow-sm px-4 sm:px-8 py-2 flex items-center gap-4">
 
@@ -244,7 +244,7 @@
                         }
                     </script>
 
-                    {{-- Bell Button dengan indikator animasi --}}
+                    {{-- Bell Button --}}
                     <button @click="openBell()"
                         class="relative p-2.5 rounded-full text-slate-500 hover:text-brand-600 hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-brand-500/50 transition-all duration-200">
                         <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"
@@ -366,7 +366,7 @@
             <main class="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 lg:p-8 custom-scrollbar">
 
                 <div class="max-w-7xl mx-auto space-y-6">
-                    {{-- Flash Messages (Redesigned as Modern Callouts) --}}
+                    {{-- Flash Messages --}}
                     @if (session('success'))
                         <div class="flex items-start gap-4 p-4 rounded-xl bg-emerald-50 border-l-4 border-emerald-500 shadow-sm animate-fade-up"
                             role="alert">
