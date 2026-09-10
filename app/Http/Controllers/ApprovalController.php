@@ -51,11 +51,6 @@ class ApprovalController extends Controller
     {
         Gate::authorize('approveAsAtasan', $permohonan);
 
-        // Block jika approver belum punya TTD
-        if (! auth()->user()->signature_path) {
-            return redirect()->back()
-                ->with('error', 'Anda belum memiliki tanda tangan digital. Silakan buat tanda tangan di halaman Profil sebelum melakukan approval.');
-        }
 
         $this->service->approveAtasan($permohonan, auth()->user());
 
@@ -193,11 +188,6 @@ class ApprovalController extends Controller
     {
         Gate::authorize('approveAsAtasan', $permohonan);
 
-        // Block jika approver belum punya TTD
-        if (! auth()->user()->signature_path) {
-            return redirect()->back()
-                ->with('error', 'Anda belum memiliki tanda tangan digital. Silakan buat tanda tangan di halaman Profil sebelum melakukan approval.');
-        }
 
         $this->service->approveAtasan($permohonan, auth()->user());
 
@@ -211,11 +201,6 @@ class ApprovalController extends Controller
     {
         Gate::authorize('approveAsDirut', $permohonan);
 
-        // Block jika approver belum punya TTD
-        if (! auth()->user()->signature_path) {
-            return redirect()->back()
-                ->with('error', 'Anda belum memiliki tanda tangan digital. Silakan buat tanda tangan di halaman Profil sebelum melakukan approval.');
-        }
 
         $this->service->approveDirut($permohonan, auth()->user());
 

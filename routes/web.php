@@ -53,35 +53,6 @@ Route::middleware(['auth', 'email.verified'])->group(function () {
         ->name('profile.update');
     Route::put('/profile/password', [App\Http\Controllers\ProfileController::class, 'updatePassword'])
         ->name('profile.password');
-    Route::post('/profile/signature/upload', [App\Http\Controllers\ProfileController::class, 'uploadSignature'])
-        ->name('profile.signature.upload');
-    Route::post('/profile/signature/canvas', [App\Http\Controllers\ProfileController::class, 'saveSignatureCanvas'])
-        ->name('profile.signature.canvas');
-    Route::delete('/profile/signature', [App\Http\Controllers\ProfileController::class, 'deleteSignature'])
-        ->name('profile.signature.delete');
-
-    //tanda tangan
-    Route::get('/signature/{user}', [App\Http\Controllers\ProfileController::class, 'showSignature'])
-        ->name('signature.show');
-
-    Route::get('/file/signature', function (Illuminate\Http\Request $request) {
-        $path = base64_decode($request->query('path', ''));
-
-        // Validasi: hanya boleh akses file di folder signatures/
-        if (! str_starts_with($path, 'signatures/')) {
-            abort(403);
-        }
-
-        if (! \Illuminate\Support\Facades\Storage::exists($path)) {
-            abort(404);
-        }
-
-        return response(
-            \Illuminate\Support\Facades\Storage::get($path),
-            200,
-            ['Content-Type' => 'image/png', 'Cache-Control' => 'private, max-age=3600']
-        );
-    })->name('signature.file');
 
     // Notifications
     Route::prefix('notifications')->name('notifications.')->group(function () {

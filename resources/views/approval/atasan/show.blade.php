@@ -108,22 +108,6 @@
                     </div>
                 </div>
             </div>
-
-            {{-- Warning: Pemohon belum punya tanda tangan digital --}}
-            @if (!$permohonan->ttd_pemohon_path)
-                <div
-                    class="mt-4 pt-4 border-t border-slate-100 flex items-start gap-3 p-3.5 bg-amber-50 rounded-xl border border-amber-200/80 text-amber-800">
-                    <svg class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                    <div class="text-xs">
-                        <span class="font-bold">Catatan Tanda Tangan:</span> Pemohon belum melampirkan tanda tangan digital
-                        di profilnya. Tanda tangan pemohon akan tampil kosong pada lembar dokumen ini.
-                    </div>
-                </div>
-            @endif
         </div>
 
         {{-- ── 3. Dokumen Permohonan Viewer (A4 Sheet Preview) ── --}}
@@ -274,33 +258,12 @@
                         </div>
                     </div>
 
-                    {{-- Peringatan jika Approver belum punya TTD --}}
-                    @if (!auth()->user()->signature_path)
-                        <div
-                            class="p-4 rounded-xl bg-amber-50 border border-amber-200 flex items-start gap-3 text-amber-800 text-xs">
-                            <svg class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                            </svg>
-                            <div class="space-y-1">
-                                <span class="font-bold block text-sm">Tanda Tangan anda Belum Tersedia</span>
-                                <p>anda harus mengunggah tanda tangan digital terlebih dahulu di profil agar dapat melakukan
-                                    approval.</p>
-                                <a href="{{ route('profile.edit') }}" target="_blank"
-                                    class="inline-flex items-center gap-1 font-bold underline hover:text-amber-900 mt-1">
-                                    Upload Tanda Tangan di Profil &rarr;
-                                </a>
-                            </div>
-                        </div>
-                    @endif
-
                     <form method="POST" action="{{ route('approval.atasan.approve', $permohonan) }}"
                         @submit="loading = true">
                         @csrf
                         <button type="submit"
                             class="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-bold text-sm bg-emerald-600 text-white hover:bg-emerald-700 shadow-md shadow-emerald-600/25 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                            :disabled="loading || {{ !auth()->user()->signature_path ? 'true' : 'false' }}">
+                            :disabled="loading">
                             <svg x-show="loading" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
                                     stroke-width="4" />

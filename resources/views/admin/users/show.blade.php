@@ -93,11 +93,6 @@
                         <p class="font-medium text-slate-800 mt-0.5">
                             {{ $user->created_at->locale('id')->isoFormat('D MMM Y') }}</p>
                     </div>
-                    <div>
-                        <p class="text-slate-400 text-xs">Tanda Tangan</p>
-                        <p class="font-medium text-slate-800 mt-0.5">{{ $user->signature_path ? 'Ada' : 'Belum upload' }}
-                        </p>
-                    </div>
                     @if ($user->isSuspended())
                         <div class="col-span-2">
                             <p class="text-slate-400 text-xs">Alasan Suspend</p>
@@ -249,7 +244,8 @@
                                     <h3 class="font-semibold text-red-700 mb-3">Logout Semua Session</h3>
                                     <p class="text-sm text-slate-600 mb-4">Semua session
                                         <strong>{{ $user->name }}</strong> ({{ $sessions->count() }} session) akan
-                                        diterminasi.</p>
+                                        diterminasi.
+                                    </p>
                                     <form method="POST" action="{{ route('admin.users.forceLogoutAll', $user) }}">
                                         @csrf
                                         <div class="mb-4"><label class="label label-required">Alasan</label>
@@ -311,7 +307,8 @@
                                                         <h3 class="font-semibold text-slate-900 mb-1">Force Logout Session
                                                         </h3>
                                                         <p class="text-sm text-slate-500 mb-1">User:
-                                                            <strong>{{ $user->name }}</strong></p>
+                                                            <strong>{{ $user->name }}</strong>
+                                                        </p>
                                                         <p class="text-xs font-mono text-slate-400 mb-4">IP:
                                                             {{ $sess->ip_address }}</p>
                                                         <form method="POST"

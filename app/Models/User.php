@@ -114,14 +114,6 @@ class User extends Authenticatable
         return $this->jabatan?->nama ?? '';
     }
 
-    /** Signature URL untuk ditampilkan di view (via route controller) */
-    public function getSignatureUrlAttribute(): ?string
-    {
-        return $this->signature_path
-            ? route('signature.show', ['user' => $this->id])
-            : null;
-    }
-
     /**
      * Level jabatan user saat ini.
      * Fallback ke LEVEL_STAFF jika jabatan belum di-set.

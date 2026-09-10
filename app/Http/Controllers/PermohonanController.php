@@ -186,11 +186,6 @@ class PermohonanController extends Controller
 
         $this->authorize('submit', $permohonan);
 
-        // Block submit jika belum ada TTD
-        if (! $user->signature_path) {
-            return redirect()->back()
-                ->with('error', 'Anda belum memiliki tanda tangan digital. Silakan buat tanda tangan di halaman Profil sebelum submit permohonan.');
-        }
 
         $permohonan = $this->service->submit($permohonan, $user);
 
