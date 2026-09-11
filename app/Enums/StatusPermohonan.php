@@ -41,7 +41,12 @@ enum StatusPermohonan: string
     /** Status yang masih bisa dibatalkan oleh Pemohon */
     public function cancellable(): bool
     {
-        return in_array($this, [self::DRAFT, self::PENDING_ATASAN, self::PENDING_DIRUT]);
+        return in_array($this, [
+            self::DRAFT,
+            self::PENDING_ATASAN,
+            self::PENDING_DIRUT,
+            self::REJECTED,
+        ]);
     }
 
     /** Status yang bisa direvisi oleh Pemohon */

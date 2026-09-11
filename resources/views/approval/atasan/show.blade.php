@@ -128,17 +128,6 @@
                         <p class="text-xs text-slate-500 mt-0.5">Tinjau seluruh data dan hak akses yang dimohonkan</p>
                     </div>
                 </div>
-
-                <div class="flex items-center gap-2">
-                    <a href="{{ route('dokumen.preview', $permohonan) }}" target="_blank"
-                        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-brand-600 bg-brand-50 hover:bg-brand-100 border border-brand-200 rounded-lg transition-colors shadow-xs">
-                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                        </svg>
-                        Buka Tab Baru
-                    </a>
-                </div>
             </div>
 
             {{-- Canvas Viewer Frame --}}
@@ -247,7 +236,7 @@
                         <div class="text-xs space-y-1">
                             <p class="font-bold text-emerald-900 text-sm">Konfirmasi Persetujuan Atasan</p>
                             <p class="leading-relaxed">
-                                Dengan menyetujui permohonan ini, tanda tangan digital anda akan otomatis disematkan pada
+                                Dengan menyetujui permohonan ini, personal digital seal anda akan otomatis disematkan pada
                                 dokumen FRUID dan status akan diteruskan ke tahap
                                 @if ($permohonan->form_type->value === 'rangkap')
                                     <span class="font-bold text-emerald-900">Persetujuan Direktur Utama</span>.

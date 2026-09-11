@@ -145,28 +145,6 @@
                     </div>
                     <h3 class="text-base font-bold text-slate-800">Dokumen Permohonan</h3>
                 </div>
-
-                @if ($permohonan->pdf_path)
-                    <a href="{{ route('permohonan.pdf', $permohonan) }}" target="_blank"
-                        class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 text-sm font-semibold rounded-xl hover:bg-slate-50 hover:text-brand-600 shadow-sm transition-colors focus:ring-2 focus:ring-brand-500 focus:ring-offset-1">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                        </svg>
-                        Download PDF
-                    </a>
-                @elseif($permohonan->status->value === 'EXECUTED')
-                    <div
-                        class="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-50 text-amber-700 rounded-lg text-xs font-semibold border border-amber-200/60">
-                        <svg class="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                                stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z">
-                            </path>
-                        </svg>
-                        PDF sedang digenerate...
-                    </div>
-                @endif
             </div>
 
             <div class="bg-slate-100/50 p-4 sm:p-6 lg:p-8 overflow-x-auto">

@@ -178,6 +178,8 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
-        return compact('statuses', 'pendingAsAtasan', 'recentPermohonan');
+        $activePermohonan = Permohonan::getActiveFor($user);
+
+        return compact('statuses', 'pendingAsAtasan', 'recentPermohonan', 'activePermohonan');
     }
 }

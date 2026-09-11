@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Permohonan;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class DocumentRenderer
 {
@@ -71,6 +72,12 @@ class DocumentRenderer
             'stampExecutor' => $stampExecutor,
 
             'isExecuted' => $p->status === \App\Enums\StatusPermohonan::EXECUTED,
+
+            // QR Code verifikasi — hanya untuk dokumen executed yang punya token
+            'verifikasiToken'  => $p->verifikasi_token,
+            'qrCodeUri'        => $p->verifikasi_token
+                ? $this->generateQrUri($p->verifikasi_token)
+                : null,
         ];
     }
 
@@ -86,5 +93,21 @@ class DocumentRenderer
 
         $binary = Storage::get($storagePath);
         return 'data:image/png;base64,' . base64_encode($binary);
+    }
+
+    /**
+     * Generate QR Code sebagai base64 data URI.
+     * Format PNG — kompatibel dengan dompdf dan browser.
+     */
+    private function generateQrUri(string $token): string
+    {
+        $url = route('verifikasi.show', ['token' => $token]);
+
+        $svg = QrCode::format('svg')
+            ->size(180)
+            ->margin(2)
+            ->generate($url);
+
+        return 'data:image/svg+xml;base64,' . base64_encode($svg);
     }
 }

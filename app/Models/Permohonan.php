@@ -47,6 +47,7 @@ class Permohonan extends Model
         'ttd_executor_path',
         'verification_stamps',
         'pdf_path',
+        'verifikasi_token',
         'revision_count',
         'alasan_reject',
         'executor_id',
@@ -126,5 +127,40 @@ class Permohonan extends Model
     public function isClaimedBy(int $userId): bool
     {
         return $this->executor_id === $userId;
+    }
+
+        // Active permohonan guard 
+    /**
+     * Status yang memblok pembuatan permohonan baru.
+     */
+    private const BLOCKING_STATUSES = [
+        StatusPermohonan::DRAFT,
+        StatusPermohonan::PENDING_ATASAN,
+        StatusPermohonan::PENDING_DIRUT,
+        StatusPermohonan::PENDING_IT,
+        StatusPermohonan::REJECTED,
+    ];
+
+    /** Cek apakah user punya permohonan yang sedang aktif/belum selesai. */
+    public static function hasActiveDraftFor(User $user): bool
+    {
+        return self::where('pemohon_id', $user->id)
+            ->whereIn('status', array_map(
+                fn($s) => $s->value,
+                self::BLOCKING_STATUSES
+            ))
+            ->exists();
+    }
+
+    /** Ambil permohonan aktif milik user (yang paling baru). */
+    public static function getActiveFor(User $user): ?self
+    {
+        return self::where('pemohon_id', $user->id)
+            ->whereIn('status', array_map(
+                fn($s) => $s->value,
+                self::BLOCKING_STATUSES
+            ))
+            ->latest()
+            ->first();
     }
 }

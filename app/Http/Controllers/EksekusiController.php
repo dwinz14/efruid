@@ -164,10 +164,19 @@ class EksekusiController extends Controller
         $stamps[] = $stampExecutor;
 
         // ── Update permohonan ─────────────────────────────────────────────────
+
+        // Generate verification token deterministik untuk QR Code
+        $verifikasiToken = substr(
+            hash('sha256', $permohonan->nomor_dokumen . '|' . config('app.key')),
+            0,
+            32
+        );
+
         $permohonan->update([
             'status'              => StatusPermohonan::EXECUTED,
             'nama_executor'       => $executor->name,
             'verification_stamps' => $stamps,
+            'verifikasi_token'    => $verifikasiToken,
         ]);
 
         // ── Catat approval log ────────────────────────────────────────────────

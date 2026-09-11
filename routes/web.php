@@ -195,3 +195,14 @@ Route::middleware(['auth', 'email.verified', 'role:it_staff'])->group(function (
     Route::post('/eksekusi/{permohonan}/unclaim', [App\Http\Controllers\EksekusiController::class, 'unclaim'])
         ->name('eksekusi.unclaim');
 });
+
+// ── Verifikasi Dokumen Publik (tanpa login, rate-limited) ─────────────────
+Route::get('/verify/{token}', [App\Http\Controllers\VerifikasiController::class, 'show'])
+    ->middleware(['throttle:20,1'])
+    ->name('verifikasi.show')
+    ->where('token', '[a-f0-9]{32}');
+
+Route::get('/verify/{token}/doc', [App\Http\Controllers\VerifikasiController::class, 'document'])
+    ->middleware(['throttle:60,1'])
+    ->name('verifikasi.document')
+    ->where('token', '[a-f0-9]{32}');

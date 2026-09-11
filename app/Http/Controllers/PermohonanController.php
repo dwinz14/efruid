@@ -34,16 +34,21 @@ class PermohonanController extends Controller
             $query->where('status', $request->status);
         }
 
-        $permohonan = $query->paginate(10)->withQueryString();
-        $statuses = StatusPermohonan::cases();
+        $permohonan       = $query->paginate(10)->withQueryString();
+        $statuses         = StatusPermohonan::cases();
+        $activePermohonan = Permohonan::getActiveFor(auth()->user());
 
-        return view('permohonan.index', compact('permohonan', 'statuses'));
+        return view('permohonan.index', compact('permohonan', 'statuses', 'activePermohonan'));
     }
 
     // ── Step 1: Pilih jenis form (wizard entry) ───────────────────────────
 
-    public function create(): View
+    public function create(): View|RedirectResponse
     {
+        if (Permohonan::hasActiveDraftFor(auth()->user())) {
+            return redirect()->route('permohonan.index')
+                ->with('warning', 'Anda masih memiliki permohonan yang sedang aktif. Selesaikan atau batalkan permohonan tersebut sebelum membuat permohonan baru.');
+        }
         return view('permohonan.create-step1');
     }
 
@@ -51,6 +56,14 @@ class PermohonanController extends Controller
 
     public function createStep2(Request $request): View|RedirectResponse
     {
+        // Guard: hanya blok jika ini kreasi baru (bukan edit draft yang sudah ada)
+        if (! $request->filled('draft_id')) {
+            if (Permohonan::hasActiveDraftFor(auth()->user())) {
+                return redirect()->route('permohonan.index')
+                    ->with('warning', 'Anda masih memiliki permohonan yang sedang aktif. Selesaikan atau batalkan permohonan tersebut sebelum membuat permohonan baru.');
+            }
+        }
+
         $request->validate([
             'form_type' => ['required', 'in:normal,rangkap'],
         ]);
@@ -200,6 +213,14 @@ class PermohonanController extends Controller
         $validated = $this->validateStep2($request, isDraft: true);
         if ($validated instanceof RedirectResponse) {
             return $validated;
+        }
+
+        // Guard: hanya blok jika ini kreasi baru (bukan update draft yang sudah ada)
+        if (! $request->filled('permohonan_id')) {
+            if (Permohonan::hasActiveDraftFor(auth()->user())) {
+                return redirect()->route('permohonan.index')
+                    ->with('warning', 'Anda masih memiliki permohonan yang sedang aktif. Selesaikan atau batalkan permohonan tersebut sebelum membuat permohonan baru.');
+            }
         }
 
         $user = auth()->user();

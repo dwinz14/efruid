@@ -41,6 +41,9 @@ enum AksiAudit: string
         // PDF
     case PDF_GENERATED        = 'pdf.generated';
 
+        // Verifikasi publik
+    case DOKUMEN_DIVERIFIKASI = 'dokumen.diverifikasi';
+
     public function label(): string
     {
         return match ($this) {
@@ -75,6 +78,7 @@ enum AksiAudit: string
             self::USER_FORCE_LOGOUT     => 'Force logout oleh admin',
             self::USER_LOGOUT_ALL       => 'Logout semua sesi oleh admin',
             self::USER_REJECTED         => 'Registrasi ditolak oleh admin',
+            self::DOKUMEN_DIVERIFIKASI => 'Dokumen diverifikasi via QR publik',
         };
     }
 }
