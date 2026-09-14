@@ -6,6 +6,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use App\Http\Middleware\CheckRole;
 use App\Http\Middleware\EnsureEmailVerified;
 use App\Http\Middleware\EnsureUserActive;
+use App\Http\Middleware\SecureDocumentHeaders;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -19,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role'             => CheckRole::class,
             'email.verified'   => EnsureEmailVerified::class,
             'user.active'      => EnsureUserActive::class,
+            'secure.doc'       => SecureDocumentHeaders::class,
         ]);
 
         // Tambahkan ke grup 'web' — aktif untuk semua request web

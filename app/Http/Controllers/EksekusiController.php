@@ -225,15 +225,7 @@ class EksekusiController extends Controller
 
     public function downloadPdf(Permohonan $permohonan): Response|RedirectResponse
     {
-        $user = auth()->user();
-
-        $boleh = $user->id === $permohonan->pemohon_id
-            || $user->isItStaff()
-            || $user->isSuperAdmin();
-
-        if (! $boleh) {
-            abort(403);
-        }
+        $this->authorize('download', $permohonan);
 
         if (! $permohonan->pdf_path || ! Storage::exists($permohonan->pdf_path)) {
             return back()->withErrors([
@@ -241,8 +233,18 @@ class EksekusiController extends Controller
             ]);
         }
 
+        $user        = auth()->user();
         $nomorBersih = preg_replace('/[^A-Za-z0-9\-]/', '_', $permohonan->nomor_dokumen ?? $permohonan->id);
         $filename    = "FRUID_{$nomorBersih}.pdf";
+
+        AuditService::log(
+            AksiAudit::PDF_DOWNLOADED,
+            $user->id,
+            $permohonan,
+            null,
+            ['filename' => $filename],
+            $permohonan->nomor_dokumen,
+        );
 
         return response(Storage::get($permohonan->pdf_path), 200, [
             'Content-Type'        => 'application/pdf',

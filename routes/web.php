@@ -44,6 +44,7 @@ Route::middleware(['auth', 'email.verified'])->group(function () {
     Route::get('/permohonan/{permohonan}/pdf', [App\Http\Controllers\EksekusiController::class, 'downloadPdf'])
         ->name('permohonan.pdf');
     Route::get('/dokumen/{permohonan}/preview', [App\Http\Controllers\DokumenController::class, 'preview'])
+        ->middleware('secure.doc')
         ->name('dokumen.preview');
 
     //profile user
@@ -198,11 +199,11 @@ Route::middleware(['auth', 'email.verified', 'role:it_staff'])->group(function (
 
 // ── Verifikasi Dokumen Publik (tanpa login, rate-limited) ─────────────────
 Route::get('/verify/{token}', [App\Http\Controllers\VerifikasiController::class, 'show'])
-    ->middleware(['throttle:20,1'])
+    ->middleware(['throttle:20,1', 'secure.doc:deny'])
     ->name('verifikasi.show')
     ->where('token', '[a-f0-9]{32}');
 
 Route::get('/verify/{token}/doc', [App\Http\Controllers\VerifikasiController::class, 'document'])
-    ->middleware(['throttle:60,1'])
+    ->middleware(['throttle:60,1', 'secure.doc'])
     ->name('verifikasi.document')
     ->where('token', '[a-f0-9]{32}');

@@ -20,8 +20,7 @@ class VerifikasiController extends Controller
         $permohonan = $this->findByToken($token);
 
         if (! $permohonan) {
-            return response(view('verifikasi.not-found')->render(), 404)
-                ->withHeaders($this->securityHeaders());
+            return response(view('verifikasi.not-found')->render(), 404);
         }
 
         // Log akses publik — wrapped try/catch agar tidak break halaman
@@ -41,13 +40,11 @@ class VerifikasiController extends Controller
             // Audit opsional — tidak boleh menghentikan halaman verifikasi
         }
 
-        $html = view('verifikasi.show', [
+        return response(view('verifikasi.show', [
             'permohonan' => $permohonan,
             'stamps'     => $permohonan->verification_stamps ?? [],
             'token'      => $token,
-        ])->render();
-
-        return response($html)->withHeaders($this->securityHeaders());
+        ])->render());
     }
 
     // ── Serve dokumen FRUID untuk iframe (token yang sama) ────────────────
@@ -77,27 +74,5 @@ class VerifikasiController extends Controller
         return Permohonan::where('verifikasi_token', $token)
             ->with(['pemohon', 'kantor', 'atasan', 'executor'])
             ->first();
-    }
-
-    private function securityHeaders(): array
-    {
-        $csp = [
-            "frame-ancestors 'none'",
-            "default-src 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:* http://127.0.0.1:* ws://localhost:* ws://127.0.0.1:* https: data: blob:",
-            "frame-src 'self' data: blob:",
-            "img-src 'self' data: blob: https:",
-            "font-src 'self' data: https://fonts.gstatic.com https:",
-            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tailwindcss.com https:",
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:* http://127.0.0.1:* https:",
-        ];
-
-        return [
-            'X-Frame-Options'         => 'DENY',
-            'X-Content-Type-Options'  => 'nosniff',
-            'Referrer-Policy'         => 'no-referrer',
-            'Cache-Control'           => 'no-store, no-cache, must-revalidate',
-            'Pragma'                  => 'no-cache',
-            'Content-Security-Policy' => implode('; ', $csp),
-        ];
     }
 }

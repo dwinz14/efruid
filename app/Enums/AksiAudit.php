@@ -40,6 +40,7 @@ enum AksiAudit: string
 
         // PDF
     case PDF_GENERATED        = 'pdf.generated';
+    case PDF_DOWNLOADED       = 'pdf.downloaded';
 
         // Verifikasi publik
     case DOKUMEN_DIVERIFIKASI = 'dokumen.diverifikasi';
@@ -79,6 +80,7 @@ enum AksiAudit: string
             self::USER_LOGOUT_ALL       => 'Logout semua sesi oleh admin',
             self::USER_REJECTED         => 'Registrasi ditolak oleh admin',
             self::DOKUMEN_DIVERIFIKASI => 'Dokumen diverifikasi via QR publik',
+            self::PDF_DOWNLOADED       => 'PDF diunduh',
         };
     }
 }

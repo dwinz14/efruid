@@ -43,4 +43,10 @@ class PermohonanPolicy
         return $user->id === $permohonan->pemohon_id
             && $permohonan->isCancellable();
     }
+
+    // download pdf khusus admin
+    public function download(User $user, Permohonan $permohonan): bool
+    {
+        return $user->isItStaff();
+    }
 }

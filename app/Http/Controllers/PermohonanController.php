@@ -292,21 +292,6 @@ class PermohonanController extends Controller
             ->with('success', 'Permohonan berhasil dibatalkan.');
     }
 
-    // ── Download PDF ──────────────────────────────────────────────────────
-
-    public function downloadPdf(Permohonan $permohonan): StreamedResponse
-    {
-        $this->authorize('view', $permohonan);
-
-        if (! $permohonan->pdf_path || ! Storage::exists($permohonan->pdf_path)) {
-            abort(404, 'Dokumen PDF belum tersedia.');
-        }
-
-        $nama = 'FRUID-' . str_replace('/', '-', $permohonan->nomor_dokumen ?? $permohonan->id);
-
-        return Storage::download($permohonan->pdf_path, $nama . '.pdf');
-    }
-
     // ── Helper: validasi data step 2 ─────────────────────────────────────
 
     private function validateStep2(Request $request, bool $isDraft = false): mixed
