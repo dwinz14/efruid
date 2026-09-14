@@ -29,12 +29,35 @@
             width: 740px;
             margin: 0 auto;
             padding: 28px 30px;
+            position: relative;
+        }
+
+
+        .doc-page.executed::before {
+            display: block;
+        }
+
+        .doc-watermark-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 100;
+            pointer-events: none;
+            opacity: 0.10;
+            display: none;
+        }
+
+        .doc-page.executed .doc-watermark-svg {
+            display: block;
         }
 
         /* ── Tables ── */
         .doc-table {
             width: 100%;
             border-collapse: collapse;
+            z-index: 5;
         }
 
         .doc-table-bordered {
@@ -314,29 +337,7 @@
             letter-spacing: 1px;
         }
 
-        /* ── Watermark TERVERIFIKASI (hanya dokumen executed) ── */
-        .doc-watermark {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 9999;
-            pointer-events: none;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
 
-        .doc-watermark svg {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 100%;
-            height: 100%;
-        }
 
         /* ── Print media ── */
         @media print {
@@ -346,6 +347,16 @@
 
             .doc-page {
                 padding: 20px 24px;
+            }
+
+            .doc-page::before {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .doc-watermark-svg {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
             }
 
             @page {
@@ -358,18 +369,15 @@
 
 <body>
 
-    {{-- ── WATERMARK fix di tengah layar/halaman ── --}}
-    @if ($isExecuted)
-        <div class="doc-watermark" aria-hidden="true">
-            <svg xmlns="http://www.w3.org/2000/svg">
-                <text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle"
+    <div class="doc-page @if ($isExecuted) executed @endif">
+        @if ($isExecuted)
+            <svg class="doc-watermark-svg" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="100%"
+                height="100%" viewBox="0 0 740 1050">
+                <text x="370" y="525" text-anchor="middle" dominant-baseline="middle"
                     font-family="Arial, Helvetica, sans-serif" font-size="72" font-weight="bold" fill="#00a651"
-                    opacity="0.10" transform="rotate(-35, 0, 0)" transform-origin="50% 50%">TERVERIFIKASI</text>
+                    transform="rotate(-35, 370, 525)">TERVERIFIKASI</text>
             </svg>
-        </div>
-    @endif
-
-    <div class="doc-page">
+        @endif
 
         {{-- ── HEADER ── --}}
         <table class="doc-table doc-table-bordered">
