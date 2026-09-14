@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\AksiAudit;
+use App\Enums\DocumentRenderMode;
 use App\Models\Permohonan;
+use App\Services\AuditService;
 use App\Services\DocumentRenderer;
-use Illuminate\Http\Response;
 use Illuminate\View\View;
 
 class DokumenController extends Controller
@@ -31,7 +33,16 @@ class DokumenController extends Controller
             abort(403);
         }
 
-        $data = $this->renderer->prepare($permohonan);
+        AuditService::log(
+            AksiAudit::DOKUMEN_DILIHAT,
+            $user->id,
+            $permohonan,
+            null,
+            ['channel' => 'interactive'],
+            $permohonan->nomor_dokumen,
+        );
+
+        $data = $this->renderer->prepare($permohonan, DocumentRenderMode::INTERACTIVE, $user);
 
         // Render sebagai halaman standalone (bukan layout app)
         return view('dokumen.fruid', $data);

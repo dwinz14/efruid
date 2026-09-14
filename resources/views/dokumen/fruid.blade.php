@@ -368,6 +368,7 @@
 </head>
 
 <body>
+    <x-document-guard :mode="$renderMode ?? 'interactive'" :trace-label="$traceLabel ?? null">
 
     <div class="doc-page @if ($isExecuted) executed @endif">
         @if ($isExecuted)
@@ -661,6 +662,7 @@
         @endif
 
     </div>
+    </x-document-guard>
 </body>
 
 </html>

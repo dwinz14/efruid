@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\DocumentRenderMode;
 use App\Models\Permohonan;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Storage;
@@ -13,14 +14,14 @@ class PdfService
     public function generate(Permohonan $permohonan): string
     {
         // Gunakan data yang sama dengan preview
-        $data = $this->renderer->prepare($permohonan);
+        $data = $this->renderer->prepare($permohonan, DocumentRenderMode::PDF);
 
         $pdf = Pdf::loadView('dokumen.fruid', $data)
             ->setPaper('a4', 'portrait')
             ->setWarnings(false);
 
         $content = $pdf->output();
-        $path    = "pdf/{$permohonan->id}.pdf";
+        $path = "pdf/{$permohonan->id}.pdf";
 
         Storage::makeDirectory('pdf');
         Storage::put($path, $content);

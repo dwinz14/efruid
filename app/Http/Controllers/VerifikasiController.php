@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\AksiAudit;
+use App\Enums\DocumentRenderMode;
 use App\Models\Permohonan;
 use App\Services\AuditService;
 use App\Services\DocumentRenderer;
@@ -31,7 +32,7 @@ class VerifikasiController extends Controller
                 $permohonan,
                 [],
                 [
-                    'ip'         => $request->ip(),
+                    'ip' => $request->ip(),
                     'user_agent' => substr($request->userAgent() ?? '', 0, 200),
                 ],
                 $permohonan->nomor_dokumen,
@@ -42,14 +43,14 @@ class VerifikasiController extends Controller
 
         return response(view('verifikasi.show', [
             'permohonan' => $permohonan,
-            'stamps'     => $permohonan->verification_stamps ?? [],
-            'token'      => $token,
+            'stamps' => $permohonan->verification_stamps ?? [],
+            'token' => $token,
         ])->render());
     }
 
     // ── Serve dokumen FRUID untuk iframe (token yang sama) ────────────────
 
-    public function document(string $token): Response
+    public function document(Request $request, string $token): Response
     {
         $permohonan = $this->findByToken($token);
 
@@ -57,13 +58,30 @@ class VerifikasiController extends Controller
             abort(404);
         }
 
-        $html = view('dokumen.fruid', $this->renderer->prepare($permohonan))->render();
+        try {
+            AuditService::log(
+                AksiAudit::DOKUMEN_DILIHAT,
+                null,
+                $permohonan,
+                null,
+                ['channel' => 'public'],
+                $permohonan->nomor_dokumen,
+            );
+        } catch (\Throwable) {
+            // Public verification must remain available if audit storage fails.
+        }
+
+        $html = view('dokumen.fruid', $this->renderer->prepare(
+            $permohonan,
+            DocumentRenderMode::PUBLIC,
+            $request->user(),
+        ))->render();
 
         return response($html)->withHeaders([
-            'Content-Type'    => 'text/html; charset=utf-8',
+            'Content-Type' => 'text/html; charset=utf-8',
             'X-Frame-Options' => 'SAMEORIGIN',
-            'Cache-Control'   => 'no-store, no-cache',
-            'Pragma'          => 'no-cache',
+            'Cache-Control' => 'no-store, no-cache',
+            'Pragma' => 'no-cache',
         ]);
     }
 

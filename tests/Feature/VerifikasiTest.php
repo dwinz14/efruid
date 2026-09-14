@@ -19,6 +19,7 @@ class VerifikasiTest extends TestCase
     use RefreshDatabase;
 
     private Permohonan $executedPermohonan;
+
     private string $token;
 
     protected function setUp(): void
@@ -26,21 +27,21 @@ class VerifikasiTest extends TestCase
         parent::setUp();
 
         $kantor = Kantor::create([
-            'nama'      => 'PUSAT',
-            'kode'      => 'PST',
-            'is_pusat'  => true,
+            'nama' => 'PUSAT',
+            'kode' => 'PST',
+            'is_pusat' => true,
             'is_active' => true,
         ]);
 
         $rolePemohon = Role::create(['name' => RoleUser::PEMOHON->value, 'label' => 'Pemohon']);
 
         $pemohon = User::create([
-            'name'           => 'Jane Doe',
-            'nik'            => 'AP123456789',
-            'email'          => 'jane@example.com',
-            'password'       => 'password',
-            'kantor_id'      => $kantor->id,
-            'is_active'      => true,
+            'name' => 'Jane Doe',
+            'nik' => 'AP123456789',
+            'email' => 'jane@example.com',
+            'password' => 'password',
+            'kantor_id' => $kantor->id,
+            'is_active' => true,
             'email_verified' => true,
         ]);
         $pemohon->roles()->attach($rolePemohon->id);
@@ -48,33 +49,33 @@ class VerifikasiTest extends TestCase
         $this->token = '8e919f9f47fe971c57cd1ace9c8f5fc6';
 
         $this->executedPermohonan = Permohonan::create([
-            'nomor_dokumen'       => 'FRUID/101/2026/0001',
-            'form_type'           => FormType::NORMAL,
-            'tanggal_permohonan'  => now(),
-            'pemohon_id'          => $pemohon->id,
-            'kantor_id'           => $kantor->id,
-            'nama_pemohon'        => 'Jane Doe',
-            'jabatan_pemohon'     => 'Customer Service',
-            'nik_pemohon'         => 'AP123456789',
-            'user_id_ussi'        => 'AP1234',
-            'jenis_permohonan'    => JenisPermohonan::PENDAFTARAN,
-            'access_level'        => AccessLevel::USER,
-            'status'              => StatusPermohonan::EXECUTED,
-            'verifikasi_token'    => $this->token,
+            'nomor_dokumen' => 'FRUID/101/2026/0001',
+            'form_type' => FormType::NORMAL,
+            'tanggal_permohonan' => now(),
+            'pemohon_id' => $pemohon->id,
+            'kantor_id' => $kantor->id,
+            'nama_pemohon' => 'Jane Doe',
+            'jabatan_pemohon' => 'Customer Service',
+            'nik_pemohon' => 'AP123456789',
+            'user_id_ussi' => 'AP1234',
+            'jenis_permohonan' => JenisPermohonan::PENDAFTARAN,
+            'access_level' => AccessLevel::USER,
+            'status' => StatusPermohonan::EXECUTED,
+            'verifikasi_token' => $this->token,
             'verification_stamps' => [
                 [
-                    'role'      => 'Pemohon',
-                    'nama'      => 'Jane Doe',
-                    'jabatan'   => 'Customer Service',
+                    'role' => 'Pemohon',
+                    'nama' => 'Jane Doe',
+                    'jabatan' => 'Customer Service',
                     'timestamp' => '10/09/2026 16:00:00 WIB',
-                    'hash'      => 'fd16011cf8e70e1cbb7fdef9a28d0ca17ca512da6de5b0d0104f522fe5ffdbe4',
+                    'hash' => 'fd16011cf8e70e1cbb7fdef9a28d0ca17ca512da6de5b0d0104f522fe5ffdbe4',
                 ],
                 [
-                    'role'      => 'Administrator USSI',
-                    'nama'      => 'IT Admin',
-                    'jabatan'   => 'Staff IT',
+                    'role' => 'Administrator USSI',
+                    'nama' => 'IT Admin',
+                    'jabatan' => 'Staff IT',
                     'timestamp' => '10/09/2026 16:15:00 WIB',
-                    'hash'      => 'be63ac8e91fe27faa57fcebe5d4ac6755afee4f32270a632ff12129e07cefeb9',
+                    'hash' => 'be63ac8e91fe27faa57fcebe5d4ac6755afee4f32270a632ff12129e07cefeb9',
                 ],
             ],
         ]);
@@ -95,7 +96,7 @@ class VerifikasiTest extends TestCase
         // Verify CSP allows necessary sources without breaking
         $csp = $response->headers->get('Content-Security-Policy');
         $this->assertStringContainsString("frame-ancestors 'none'", $csp);
-        $this->assertStringContainsString("default-src", $csp);
+        $this->assertStringContainsString('default-src', $csp);
     }
 
     public function test_document_iframe_endpoint_loads(): void
@@ -106,6 +107,15 @@ class VerifikasiTest extends TestCase
         $response->assertHeader('X-Frame-Options', 'SAMEORIGIN');
         $response->assertSee('FRUID/101/2026/0001');
         $response->assertSee('Jane Doe');
+        $response->assertSee('document-guard--public');
+        $response->assertSee('VERIFIKASI PUBLIK');
+        $response->assertSee("event.key === 'F12'", false);
+
+        $this->assertDatabaseHas('audit_logs', [
+            'aksi' => 'dokumen.dilihat',
+            'subject_id' => $this->executedPermohonan->id,
+            'nomor_dokumen' => 'FRUID/101/2026/0001',
+        ]);
     }
 
     public function test_verification_returns_404_for_invalid_token(): void
