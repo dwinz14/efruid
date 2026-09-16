@@ -9,7 +9,7 @@ use App\Models\Jabatan;
 use App\Models\Permohonan;
 use App\Models\User;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Storage;
+
 
 class ApprovalService
 {
@@ -36,7 +36,6 @@ class ApprovalService
             default                                       => StatusPermohonan::PENDING_IT,
         };
 
-        $ttdPath = $this->embedSignature($approver, $permohonan, 'atasan');
         $stamp   = $this->generateStamp($approver, 'Atasan', $permohonan);
 
         $stamps   = $permohonan->verification_stamps ?? [];
@@ -44,7 +43,6 @@ class ApprovalService
 
         $permohonan->update([
             'status'              => $statusKe,
-            'ttd_atasan_path'     => $ttdPath,
             'verification_stamps' => $stamps,
         ]);
 
@@ -82,7 +80,6 @@ class ApprovalService
         $statusDari = $permohonan->status;
         $statusKe   = StatusPermohonan::PENDING_IT;
 
-        $ttdPath = $this->embedSignature($approver, $permohonan, 'dirut');
         $stamp   = $this->generateStamp($approver, 'Direktur Utama', $permohonan);
 
         $stamps   = $permohonan->verification_stamps ?? [];
@@ -90,7 +87,6 @@ class ApprovalService
 
         $permohonan->update([
             'status'              => $statusKe,
-            'ttd_dirut_path'      => $ttdPath,
             'verification_stamps' => $stamps,
         ]);
 
@@ -184,21 +180,6 @@ class ApprovalService
     }
 
     // ── Private helpers ───────────────────────────────────────────────────
-
-    private function embedSignature(User $approver, Permohonan $permohonan, string $role): ?string
-    {
-        if (! $approver->signature_path) return null;
-
-        $src  = $approver->signature_path;
-        $dest = "signatures/snapshots/{$permohonan->id}_{$role}.png";
-
-        if (Storage::exists($src)) {
-            Storage::copy($src, $dest);
-            return $dest;
-        }
-
-        return null;
-    }
 
     private function generateStamp(User $approver, string $roleLabel, Permohonan $permohonan): array
     {

@@ -407,9 +407,7 @@
                             !$errors->has('email') &&
                             !$errors->has('password') &&
                             !$errors->has('current_password') &&
-                            !$errors->has('alasan_reject') &&
-                            !$errors->has('signature_file') &&
-                            !$errors->has('signature_data'))
+                            !$errors->has('alasan_reject'))
                         <div class="flex items-start gap-4 p-4 rounded-xl bg-amber-50 border-l-4 border-amber-500 shadow-sm animate-fade-up"
                             role="alert">
                             <div class="bg-amber-100 p-2 rounded-full flex-shrink-0 mt-0.5">

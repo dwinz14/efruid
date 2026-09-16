@@ -216,7 +216,7 @@
         }
 
         .doc-ttd .ttd-body {
-            height: 90px;
+            height: 148px;
             vertical-align: middle;
         }
 
@@ -232,6 +232,13 @@
             max-width: 140px;
             display: block;
             margin: 0 auto 3px auto;
+        }
+
+        .seal-img {
+            max-height: 138px;
+            max-width: 108px;
+            display: block;
+            margin: 0 auto;
         }
 
         .ttd-stamp {
@@ -266,7 +273,7 @@
         }
 
         .doc-admin-space {
-            height: 70px;
+            height: 148px;
         }
 
         .doc-admin-name {
@@ -496,39 +503,23 @@
             <tr>
                 {{-- Pemohon --}}
                 <td class="ttd-body">
-                    @if ($ttdPemohon)
-                        <img src="{{ $ttdPemohon }}" class="ttd-img" alt="TTD Pemohon">
+                    @if ($sealPemohon)
+                        <img src="{{ $sealPemohon }}" class="seal-img" alt="Seal Pemohon">
                     @endif
                 </td>
 
                 {{-- Atasan/Pimpinan --}}
                 <td class="ttd-body">
-                    @if ($ttdAtasan)
-                        <img src="{{ $ttdAtasan }}" class="ttd-img" alt="TTD Atasan">
-                    @endif
-                    @if ($stampAtasan)
-                        <div class="ttd-stamp">
-                            {{ $stampAtasan['timestamp'] }}<br>
-                            <span class="ttd-stamp-hash">
-                                {{ substr($stampAtasan['hash'], 0, 24) }}...
-                            </span>
-                        </div>
+                    @if ($sealAtasan)
+                        <img src="{{ $sealAtasan }}" class="seal-img" alt="Seal Atasan">
                     @endif
                 </td>
 
                 {{-- Direksi (rangkap) --}}
                 @if ($isRangkap)
                     <td class="ttd-body">
-                        @if ($ttdDirut)
-                            <img src="{{ $ttdDirut }}" class="ttd-img" alt="TTD Direktur">
-                        @endif
-                        @if ($stampDirut)
-                            <div class="ttd-stamp">
-                                {{ $stampDirut['timestamp'] }}<br>
-                                <span class="ttd-stamp-hash">
-                                    {{ substr($stampDirut['hash'], 0, 24) }}...
-                                </span>
-                            </div>
+                        @if ($sealDirut)
+                            <img src="{{ $sealDirut }}" class="seal-img" alt="Seal Dirut">
                         @endif
                     </td>
                 @endif
@@ -590,16 +581,8 @@
                         <div class="doc-admin-box">
                             <div class="doc-admin-bar">Administrator Aplikasi USSI</div>
                             <div class="doc-admin-space" style="text-align:center;">
-                                @if ($ttdExecutor)
-                                    <img src="{{ $ttdExecutor }}" class="ttd-img" alt="TTD Administrator USSI">
-                                @endif
-                                @if ($stampExecutor)
-                                    <div class="ttd-stamp">
-                                        {{ $stampExecutor['timestamp'] }}<br>
-                                        <span class="ttd-stamp-hash">
-                                            {{ substr($stampExecutor['hash'], 0, 24) }}...
-                                        </span>
-                                    </div>
+                                @if ($sealExecutor)
+                                    <img src="{{ $sealExecutor }}" class="seal-img" alt="Seal Administrator USSI">
                                 @endif
                             </div>
                             <div class="doc-admin-name">{{ $p->nama_executor ?? '( ________________ )' }}</div>

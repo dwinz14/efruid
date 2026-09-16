@@ -9,7 +9,7 @@ use App\Models\Permohonan;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
+
 
 class PermohonanService
 {
@@ -103,23 +103,28 @@ class PermohonanService
 
         $nomorDokumen = $this->generateNomorDokumen($permohonan);
 
-        // Copy snapshot TTD pemohon
-        $ttdPemohonPath = null;
-        if ($pemohon->signature_path && Storage::exists($pemohon->signature_path)) {
-            $ttdPemohonPath = $this->copySignatureSnapshot(
-                $pemohon,
-                $permohonan->id,
-                'pemohon'
-            );
-        }
+        // Generate pemohon stamp (bukti digital submit)
+        $stampTimestamp = Carbon::now()->setTimezone('Asia/Jakarta')->format('d/m/Y H:i:s') . ' WIB';
+        $stampPemohon   = [
+            'role'      => 'Pemohon',
+            'nama'      => $pemohon->name,
+            'jabatan'   => $pemohon->jabatan_label,
+            'timestamp' => $stampTimestamp,
+            'hash'      => hash('sha256', implode('|', [
+                $nomorDokumen,
+                $pemohon->id,
+                'Pemohon',
+                $stampTimestamp,
+            ])),
+        ];
 
         $permohonan->update([
-            'status'           => $statusAwal,
-            'nomor_dokumen'    => $nomorDokumen,
-            'nama_pemohon'     => $pemohon->name,
-            'jabatan_pemohon'  => $pemohon->jabatan_label,
-            'nik_pemohon'      => $pemohon->nik,
-            'ttd_pemohon_path' => $ttdPemohonPath,
+            'status'              => $statusAwal,
+            'nomor_dokumen'       => $nomorDokumen,
+            'nama_pemohon'        => $pemohon->name,
+            'jabatan_pemohon'     => $pemohon->jabatan_label,
+            'nik_pemohon'         => $pemohon->nik,
+            'verification_stamps' => [$stampPemohon],
         ]);
 
         AuditService::log(
@@ -188,20 +193,5 @@ class PermohonanService
 
             return "FRUID/{$kode}/{$tahun}/{$seq}";
         });
-    }
-
-    // ── Copy snapshot TTD ─────────────────────────────────────────────────
-
-    private function copySignatureSnapshot(User $user, int $permohonanId, string $role): string
-    {
-        $src  = $user->signature_path;
-        $dest = "signatures/snapshots/{$permohonanId}_{$role}.png";
-
-        if (Storage::exists($src)) {
-            Storage::copy($src, $dest);
-            return $dest;
-        }
-
-        return $src;
     }
 }

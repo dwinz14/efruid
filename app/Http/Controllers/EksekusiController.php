@@ -143,13 +143,6 @@ class EksekusiController extends Controller
             return back()->withErrors(['error' => 'Anda harus "Ambil" permohonan ini sebelum bisa mengeksekusi.']);
         }
 
-        // ── Embed tanda tangan executor ───────────────────────────────────────
-        $ttdExecutorPath = null;
-        if ($executor->signature_path && Storage::exists($executor->signature_path)) {
-            $dest = "signatures/snapshots/{$permohonan->id}_executor.png";
-            Storage::copy($executor->signature_path, $dest);
-            $ttdExecutorPath = $dest;
-        }
 
         // ── Generate verification stamp untuk Administrator USSI ──────────────
         $timestamp = Carbon::now()->setTimezone('Asia/Jakarta')->format('d/m/Y H:i:s') . ' WIB';
@@ -174,7 +167,6 @@ class EksekusiController extends Controller
         $permohonan->update([
             'status'              => StatusPermohonan::EXECUTED,
             'nama_executor'       => $executor->name,
-            'ttd_executor_path'   => $ttdExecutorPath,
             'verification_stamps' => $stamps,
         ]);
 
