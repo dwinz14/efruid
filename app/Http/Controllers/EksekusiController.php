@@ -73,6 +73,11 @@ class EksekusiController extends Controller
             return back()->withErrors(['error' => 'Permohonan ini sudah diambil oleh anggota tim lain.']);
         }
 
+        // Blok self-service: IT Staff tidak boleh mengeksekusi permohonan yang ia ajukan sendiri
+        if ($permohonan->pemohon_id === auth()->id()) {
+            return back()->withErrors(['error' => 'Anda tidak dapat mengeksekusi permohonan yang Anda ajukan sendiri. Permohonan ini harus dikerjakan oleh rekan IT lain.']);
+        }
+
         $user = auth()->user();
 
         $permohonan->update([
@@ -137,6 +142,11 @@ class EksekusiController extends Controller
         }
 
         $executor = auth()->user();
+
+        // Blok self-service: defense-in-depth (berlapis bersama Policy dan View)
+        if ($permohonan->pemohon_id === $executor->id) {
+            return back()->withErrors(['error' => 'Anda tidak dapat mengeksekusi permohonan yang Anda ajukan sendiri.']);
+        }
 
         // Harus sudah diklaim oleh diri sendiri
         if (! $permohonan->isClaimedBy($executor->id)) {

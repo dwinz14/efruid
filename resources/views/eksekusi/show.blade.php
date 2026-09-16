@@ -183,14 +183,60 @@
         @if ($permohonan->status->value === 'PENDING_IT')
             @php $myId = auth()->id(); @endphp
 
-            @if (!$permohonan->isClaimed())
+            @if ($permohonan->pemohon_id === $myId)
+                {{-- KONDISI 0: PERMOHONAN MILIK SENDIRI — tidak bisa dieksekusi --}}
+                <div class="bg-amber-50 border border-amber-200 rounded-2xl p-6 animate-fade-up"
+                    style="animation-delay: 0.15s;">
+                    <div class="flex items-start gap-4">
+                        <div
+                            class="w-12 h-12 rounded-2xl bg-amber-100 border border-amber-200 flex items-center justify-center text-amber-600 flex-shrink-0 shadow-xs">
+                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h3 class="text-base font-bold text-amber-800">Tidak Dapat Dieksekusi</h3>
+                            <p class="text-sm text-amber-700 mt-1 leading-relaxed">
+                                Permohonan ini adalah milik Anda sendiri. IT Staff tidak diperkenankan mengeksekusi
+                                permohonan yang ia ajukan sendiri. Silakan hubungi rekan IT lain untuk menangani
+                                permohonan ini.
+                            </p>
+
+                            @if ($permohonan->isClaimedBy($myId))
+                                {{-- Edge case: sudah terlanjur diklaim sebelum aturan ini berlaku --}}
+                                <div class="mt-4 pt-4 border-t border-amber-200">
+                                    <p class="text-xs font-semibold text-amber-700 mb-3">
+                                        ⚠ Anda sebelumnya telah mengklaim permohonan ini. Harap lepas klaim agar rekan
+                                        IT lain dapat mengeksekusinya.
+                                    </p>
+                                    <form action="{{ route('eksekusi.unclaim', $permohonan) }}" method="POST"
+                                        onsubmit="return confirm('Lepas klaim permohonan ini?')">
+                                        @csrf
+                                        <button type="submit"
+                                            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm bg-amber-600 text-white hover:bg-amber-700 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-amber-500/50">
+                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24"
+                                                stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                            Lepas Klaim
+                                        </button>
+                                    </form>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            @elseif (!$permohonan->isClaimed())
                 {{-- KONDISI A: BELUM DIKLAIM --}}
                 <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 animate-fade-up"
                     style="animation-delay: 0.15s;">
                     <div class="flex items-start gap-4">
                         <div
                             class="w-12 h-12 rounded-2xl bg-brand-50 border border-brand-100 flex items-center justify-center text-brand-600 flex-shrink-0 shadow-xs">
-                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
                             </svg>
                         </div>
@@ -414,18 +460,4 @@
         @if ($permohonan->approvalLogs->isNotEmpty())
             @include('approval.partials.approval-log', ['logs' => $permohonan->approvalLogs])
         @endif
-
-        {{-- ── 6. Bottom Navigation ── --}}
-        <div class="pt-2 pb-6 flex items-center justify-between">
-            <a href="{{ route('eksekusi.index') }}"
-                class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors">
-                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-                Kembali ke Antrean Eksekusi
-            </a>
-            <span class="text-xs text-slate-400">eFRUID IT Operations &copy; BPR Artha Pamenang</span>
-        </div>
-
-    </div>
-@endsection
+    @endsection
