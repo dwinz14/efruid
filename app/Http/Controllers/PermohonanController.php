@@ -4,22 +4,23 @@ namespace App\Http\Controllers;
 
 use App\Enums\AccessLevel;
 use App\Enums\JenisPermohonan;
-use App\Enums\RoleUser;
 use App\Enums\StatusPermohonan;
 use App\Models\Jabatan;
 use App\Models\Kantor;
 use App\Models\Permohonan;
 use App\Models\User;
+use App\Services\DocumentPreviewFactory;
 use App\Services\PermohonanService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
-use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PermohonanController extends Controller
 {
-    public function __construct(private PermohonanService $service) {}
+    public function __construct(
+        private PermohonanService $service,
+        private DocumentPreviewFactory $previewFactory,
+    ) {}
 
     // ── Daftar permohonan milik pemohon ───────────────────────────────────
 
@@ -36,14 +37,21 @@ class PermohonanController extends Controller
 
         $permohonan = $query->paginate(10)->withQueryString();
         $statuses = StatusPermohonan::cases();
+        $activePermohonan = Permohonan::getActiveFor(auth()->user());
 
-        return view('permohonan.index', compact('permohonan', 'statuses'));
+        return view('permohonan.index', compact('permohonan', 'statuses', 'activePermohonan'));
     }
 
     // ── Step 1: Pilih jenis form (wizard entry) ───────────────────────────
 
-    public function create(): View
+    public function create(): View|RedirectResponse
     {
+        if (Permohonan::hasActiveDraftFor(auth()->user())) {
+            return redirect()->route('permohonan.index')
+                ->with('warning', 'Anda masih memiliki permohonan yang sedang aktif. Selesaikan atau batalkan permohonan tersebut sebelum membuat permohonan baru.');
+        }
+        session()->forget('permohonan.preview');
+
         return view('permohonan.create-step1');
     }
 
@@ -51,6 +59,14 @@ class PermohonanController extends Controller
 
     public function createStep2(Request $request): View|RedirectResponse
     {
+        // Guard: hanya blok jika ini kreasi baru (bukan edit draft yang sudah ada)
+        if (! $request->filled('draft_id')) {
+            if (Permohonan::hasActiveDraftFor(auth()->user())) {
+                return redirect()->route('permohonan.index')
+                    ->with('warning', 'Anda masih memiliki permohonan yang sedang aktif. Selesaikan atau batalkan permohonan tersebut sebelum membuat permohonan baru.');
+            }
+        }
+
         $request->validate([
             'form_type' => ['required', 'in:normal,rangkap'],
         ]);
@@ -68,8 +84,7 @@ class PermohonanController extends Controller
             $query = User::with('jabatan')
                 ->whereHas(
                     'jabatan',
-                    fn($q) =>
-                    $q->whereIn('level', $targetAtasanLevels)
+                    fn ($q) => $q->whereIn('level', $targetAtasanLevels)
                 )
                 ->where('is_active', true)
                 ->where('id', '!=', $user->id)
@@ -90,19 +105,25 @@ class PermohonanController extends Controller
         }
         // Jika targetAtasanLevel === null (Dirut), $atasans tetap kosong
 
-        $kantors      = Kantor::where('is_active', true)->orderBy('nama')->get();
-        $jabatans     = Jabatan::aktif()->get();
-        $formType     = $request->form_type;
+        $kantors = Kantor::where('is_active', true)->orderBy('nama')->get();
+        $jabatans = Jabatan::aktif()->get();
+        $formType = $request->form_type;
         $accessLevels = AccessLevel::cases();
-        $jenisList    = JenisPermohonan::cases();
+        $jenisList = JenisPermohonan::cases();
 
-        // Load draft jika ada
+        // Load draft jika ada. Preview yang belum disimpan diisi kembali dari
+        // session agar pengguna tidak kehilangan data saat kembali mengedit.
         $draft = null;
         if ($request->filled('draft_id')) {
             $draft = Permohonan::where('id', $request->draft_id)
                 ->where('pemohon_id', auth()->id())
                 ->where('status', StatusPermohonan::DRAFT->value)
                 ->first();
+        }
+
+        $preview = session('permohonan.preview');
+        if (! $draft && is_array($preview) && ($preview['user_id'] ?? null) === auth()->id()) {
+            $draft = $this->previewFactory->make($user, $preview['data'] ?? []);
         }
 
         // Kirim info ke view: apakah pemohon ini Dirut (tidak perlu atasan)
@@ -134,15 +155,6 @@ class PermohonanController extends Controller
 
         $user = auth()->user()->load('kantor', 'jabatan');
 
-        // Simpan sebagai draft sementara atau update draft yang ada
-        $permohonan = null;
-        if ($request->filled('permohonan_id')) {
-            $permohonan = Permohonan::where('id', $request->permohonan_id)
-                ->where('pemohon_id', auth()->id())
-                ->where('status', StatusPermohonan::DRAFT->value)
-                ->first();
-        }
-
         $data = $request->only([
             'form_type',
             'kantor_id',
@@ -160,14 +172,16 @@ class PermohonanController extends Controller
             'atasan_id',
         ]);
 
-        if ($permohonan) {
-            $permohonan = $this->service->updateDraft($permohonan, $data);
-        } else {
-            $permohonan = $this->service->createDraft($user, $data);
-        }
+        // Preview tidak boleh membuat atau mengubah draft. Payload disimpan
+        // sementara per-sesi dan baru dipersist saat tombol Simpan Draft atau
+        // Submit Permohonan dipilih secara eksplisit.
+        session()->put('permohonan.preview', [
+            'user_id' => $user->id,
+            'draft_id' => $request->filled('permohonan_id') ? (int) $request->permohonan_id : null,
+            'data' => $data,
+        ]);
 
-        // Load relasi untuk preview
-        $permohonan->load('kantor', 'atasan', 'pemohon');
+        $permohonan = $this->previewFactory->make($user, $data);
         $atasan = $permohonan->atasan;
 
         return view('permohonan.create-step3', compact('permohonan', 'user', 'atasan'));
@@ -177,17 +191,36 @@ class PermohonanController extends Controller
 
     public function submit(Request $request): RedirectResponse
     {
-        $request->validate([
-            'permohonan_id' => ['required', 'exists:permohonan,id'],
-        ]);
-
-        $permohonan = Permohonan::findOrFail($request->permohonan_id);
         $user = auth()->user();
 
+        if ($request->boolean('from_preview')) {
+            $preview = session('permohonan.preview');
+            abort_unless(is_array($preview) && ($preview['user_id'] ?? null) === $user->id, 422);
+
+            $data = $preview['data'] ?? [];
+            $draftId = $preview['draft_id'] ?? null;
+
+            $permohonan = $draftId
+                ? Permohonan::whereKey($draftId)->where('pemohon_id', $user->id)
+                    ->where('status', StatusPermohonan::DRAFT->value)->firstOrFail()
+                : null;
+
+            if ($permohonan) {
+                $permohonan = $this->service->updateDraft($permohonan, $data);
+            } else {
+                abort_if(Permohonan::hasActiveDraftFor($user), 409);
+                $permohonan = $this->service->createDraft($user, $data);
+            }
+        } else {
+            $request->validate([
+                'permohonan_id' => ['required', 'exists:permohonan,id'],
+            ]);
+            $permohonan = Permohonan::findOrFail($request->permohonan_id);
+        }
+
         $this->authorize('submit', $permohonan);
-
-
         $permohonan = $this->service->submit($permohonan, $user);
+        session()->forget('permohonan.preview');
 
         return redirect()->route('permohonan.show', $permohonan)
             ->with('success', 'Permohonan berhasil disubmit dan menunggu persetujuan atasan.');
@@ -200,6 +233,14 @@ class PermohonanController extends Controller
         $validated = $this->validateStep2($request, isDraft: true);
         if ($validated instanceof RedirectResponse) {
             return $validated;
+        }
+
+        // Guard: hanya blok jika ini kreasi baru (bukan update draft yang sudah ada)
+        if (! $request->filled('permohonan_id')) {
+            if (Permohonan::hasActiveDraftFor(auth()->user())) {
+                return redirect()->route('permohonan.index')
+                    ->with('warning', 'Anda masih memiliki permohonan yang sedang aktif. Selesaikan atau batalkan permohonan tersebut sebelum membuat permohonan baru.');
+            }
         }
 
         $user = auth()->user();
@@ -229,6 +270,8 @@ class PermohonanController extends Controller
         } else {
             $permohonan = $this->service->createDraft($user, $data);
         }
+
+        session()->forget('permohonan.preview');
 
         return redirect()->route('permohonan.step2', [
             'form_type' => $permohonan->form_type->value,
@@ -271,21 +314,6 @@ class PermohonanController extends Controller
             ->with('success', 'Permohonan berhasil dibatalkan.');
     }
 
-    // ── Download PDF ──────────────────────────────────────────────────────
-
-    public function downloadPdf(Permohonan $permohonan): StreamedResponse
-    {
-        $this->authorize('view', $permohonan);
-
-        if (! $permohonan->pdf_path || ! Storage::exists($permohonan->pdf_path)) {
-            abort(404, 'Dokumen PDF belum tersedia.');
-        }
-
-        $nama = 'FRUID-' . str_replace('/', '-', $permohonan->nomor_dokumen ?? $permohonan->id);
-
-        return Storage::download($permohonan->pdf_path, $nama . '.pdf');
-    }
-
     // ── Helper: validasi data step 2 ─────────────────────────────────────
 
     private function validateStep2(Request $request, bool $isDraft = false): mixed
@@ -296,7 +324,7 @@ class PermohonanController extends Controller
         if (empty($request->user_id_ussi) || $request->user_id_ussi === auth()->user()->nik) {
             $nik = auth()->user()->nik;
             $derived = strlen($nik) > 3
-                ? substr($nik, 0, 2) . substr($nik, 5) // AP + [skip 3 digit] + sisanya
+                ? substr($nik, 0, 2).substr($nik, 5) // AP + [skip 3 digit] + sisanya
                 : $nik;
             $request->merge(['user_id_ussi' => $derived]);
         }
@@ -307,24 +335,24 @@ class PermohonanController extends Controller
         }
 
         $rules = [
-            'form_type'        => ['required', 'in:normal,rangkap'],
-            'kantor_id'        => ['required', 'exists:kantors,id'],
-            'user_id_ussi'     => ['required', 'string', 'max:30', 'regex:/^[A-Za-z0-9_\-]+$/'],
+            'form_type' => ['required', 'in:normal,rangkap'],
+            'kantor_id' => ['required', 'exists:kantors,id'],
+            'user_id_ussi' => ['required', 'string', 'max:30', 'regex:/^[A-Za-z0-9_\-]+$/'],
             'jenis_permohonan' => ['required', 'in:pendaftaran,perubahan,nonaktif'],
-            'access_level'     => ['required', 'in:DIREKSI,ADMINISTRATOR,USER'],
-            'atasan_id'        => ['nullable', 'exists:users,id'],
+            'access_level' => ['required', 'in:DIREKSI,ADMINISTRATOR,USER'],
+            'atasan_id' => ['nullable', 'exists:users,id'],
         ];
 
         if ($request->jenis_permohonan === 'perubahan') {
             $rules['tipe_perubahan'] = ['required', 'in:permanen,sementara'];
-            $rules['jabatan_lama']   = ['required', 'string', 'max:150'];
-            $rules['jabatan_baru']   = ['required', 'string', 'max:150'];
+            $rules['jabatan_lama'] = ['required', 'string', 'max:150'];
+            $rules['jabatan_baru'] = ['required', 'string', 'max:150'];
 
             if ($request->tipe_perubahan === 'permanen') {
                 $rules['tgl_permanen'] = ['required', 'date', 'after_or_equal:today'];
             }
             if ($request->tipe_perubahan === 'sementara') {
-                $rules['tgl_mulai']   = ['required', 'date', 'after_or_equal:today'];
+                $rules['tgl_mulai'] = ['required', 'date', 'after_or_equal:today'];
                 $rules['tgl_selesai'] = ['required', 'date', 'after:tgl_mulai'];
             }
         }
@@ -334,10 +362,10 @@ class PermohonanController extends Controller
         }
 
         $messages = [
-            'user_id_ussi.regex'         => 'User ID hanya boleh berisi huruf, angka, underscore, dan strip.',
-            'tgl_selesai.after'          => 'Tanggal selesai harus setelah tanggal mulai.',
+            'user_id_ussi.regex' => 'User ID hanya boleh berisi huruf, angka, underscore, dan strip.',
+            'tgl_selesai.after' => 'Tanggal selesai harus setelah tanggal mulai.',
             'tgl_permanen.after_or_equal' => 'Tanggal tidak boleh di masa lalu.',
-            'tgl_mulai.after_or_equal'   => 'Tanggal mulai tidak boleh di masa lalu.',
+            'tgl_mulai.after_or_equal' => 'Tanggal mulai tidak boleh di masa lalu.',
             'tgl_nonaktif.after_or_equal' => 'Tanggal nonaktif tidak boleh di masa lalu.',
         ];
 

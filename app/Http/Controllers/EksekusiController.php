@@ -73,6 +73,11 @@ class EksekusiController extends Controller
             return back()->withErrors(['error' => 'Permohonan ini sudah diambil oleh anggota tim lain.']);
         }
 
+        // Blok self-service: IT Staff tidak boleh mengeksekusi permohonan yang ia ajukan sendiri
+        if ($permohonan->pemohon_id === auth()->id()) {
+            return back()->withErrors(['error' => 'Anda tidak dapat mengeksekusi permohonan yang Anda ajukan sendiri. Permohonan ini harus dikerjakan oleh rekan IT lain.']);
+        }
+
         $user = auth()->user();
 
         $permohonan->update([
@@ -138,6 +143,11 @@ class EksekusiController extends Controller
 
         $executor = auth()->user();
 
+        // Blok self-service: defense-in-depth (berlapis bersama Policy dan View)
+        if ($permohonan->pemohon_id === $executor->id) {
+            return back()->withErrors(['error' => 'Anda tidak dapat mengeksekusi permohonan yang Anda ajukan sendiri.']);
+        }
+
         // Harus sudah diklaim oleh diri sendiri
         if (! $permohonan->isClaimedBy($executor->id)) {
             return back()->withErrors(['error' => 'Anda harus "Ambil" permohonan ini sebelum bisa mengeksekusi.']);
@@ -164,10 +174,19 @@ class EksekusiController extends Controller
         $stamps[] = $stampExecutor;
 
         // ── Update permohonan ─────────────────────────────────────────────────
+
+        // Generate verification token deterministik untuk QR Code
+        $verifikasiToken = substr(
+            hash('sha256', $permohonan->nomor_dokumen . '|' . config('app.key')),
+            0,
+            32
+        );
+
         $permohonan->update([
             'status'              => StatusPermohonan::EXECUTED,
             'nama_executor'       => $executor->name,
             'verification_stamps' => $stamps,
+            'verifikasi_token'    => $verifikasiToken,
         ]);
 
         // ── Catat approval log ────────────────────────────────────────────────
@@ -216,15 +235,7 @@ class EksekusiController extends Controller
 
     public function downloadPdf(Permohonan $permohonan): Response|RedirectResponse
     {
-        $user = auth()->user();
-
-        $boleh = $user->id === $permohonan->pemohon_id
-            || $user->isItStaff()
-            || $user->isSuperAdmin();
-
-        if (! $boleh) {
-            abort(403);
-        }
+        $this->authorize('download', $permohonan);
 
         if (! $permohonan->pdf_path || ! Storage::exists($permohonan->pdf_path)) {
             return back()->withErrors([
@@ -232,8 +243,18 @@ class EksekusiController extends Controller
             ]);
         }
 
+        $user        = auth()->user();
         $nomorBersih = preg_replace('/[^A-Za-z0-9\-]/', '_', $permohonan->nomor_dokumen ?? $permohonan->id);
         $filename    = "FRUID_{$nomorBersih}.pdf";
+
+        AuditService::log(
+            AksiAudit::PDF_DOWNLOADED,
+            $user->id,
+            $permohonan,
+            null,
+            ['filename' => $filename],
+            $permohonan->nomor_dokumen,
+        );
 
         return response(Storage::get($permohonan->pdf_path), 200, [
             'Content-Type'        => 'application/pdf',

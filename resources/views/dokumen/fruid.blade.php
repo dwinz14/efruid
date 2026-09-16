@@ -29,12 +29,35 @@
             width: 740px;
             margin: 0 auto;
             padding: 28px 30px;
+            position: relative;
+        }
+
+
+        .doc-page.executed::before {
+            display: block;
+        }
+
+        .doc-watermark-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 100;
+            pointer-events: none;
+            opacity: 0.10;
+            display: none;
+        }
+
+        .doc-page.executed .doc-watermark-svg {
+            display: block;
         }
 
         /* ── Tables ── */
         .doc-table {
             width: 100%;
             border-collapse: collapse;
+            z-index: 5;
         }
 
         .doc-table-bordered {
@@ -283,37 +306,38 @@
             padding: 4px;
         }
 
-        /* ── Verification record ── */
-        .doc-vr-section {
+        /* ── QR Code Verifikasi ── */
+        .doc-qr-section {
             margin-top: 14px;
             border-top: 2px dashed #bbb;
             padding-top: 10px;
+            padding-bottom: 2px;
         }
 
-        .doc-vr-title {
+        .doc-qr-title {
             font-size: 9px;
             font-weight: bold;
-            color: #555;
+            color: #333;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            margin-bottom: 6px;
+            margin-bottom: 3px;
         }
 
-        .doc-vr-box {
-            border: 1px solid #bbb;
-            padding: 5px 8px;
-            margin-bottom: 5px;
-            font-size: 9px;
-            color: #333;
-            line-height: 1.5;
-        }
-
-        .doc-vr-hash {
-            font-family: monospace;
+        .doc-qr-text {
             font-size: 8px;
-            color: #777;
-            word-break: break-all;
+            color: #555;
+            line-height: 1.5;
+            margin-bottom: 4px;
         }
+
+        .doc-qr-code {
+            font-family: monospace;
+            font-size: 7.5px;
+            color: #888;
+            letter-spacing: 1px;
+        }
+
+
 
         /* ── Print media ── */
         @media print {
@@ -325,6 +349,16 @@
                 padding: 20px 24px;
             }
 
+            .doc-page::before {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .doc-watermark-svg {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
             @page {
                 margin: 15mm 12mm 15mm 12mm;
                 size: A4 portrait;
@@ -334,7 +368,17 @@
 </head>
 
 <body>
-    <div class="doc-page">
+    <x-document-guard :mode="$renderMode ?? 'interactive'" :trace-label="$traceLabel ?? null">
+
+    <div class="doc-page @if ($isExecuted) executed @endif">
+        @if ($isExecuted)
+            <svg class="doc-watermark-svg" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="100%"
+                height="100%" viewBox="0 0 740 1050">
+                <text x="370" y="525" text-anchor="middle" dominant-baseline="middle"
+                    font-family="Arial, Helvetica, sans-serif" font-size="72" font-weight="bold" fill="#00a651"
+                    transform="rotate(-35, 370, 525)">TERVERIFIKASI</text>
+            </svg>
+        @endif
 
         {{-- ── HEADER ── --}}
         <table class="doc-table doc-table-bordered">
@@ -591,26 +635,34 @@
                 </tr>
             </table>
 
-            {{-- ── VERIFICATION RECORD ── --}}
-            @if (count($stamps) > 0)
-                <div class="doc-vr-section">
-                    <div class="doc-vr-title">Verification Record &mdash; eFRUID System</div>
-                    @foreach ($stamps as $stamp)
-                        <div class="doc-vr-box">
-                            <strong>{{ $stamp['role'] }}</strong>:
-                            {{ $stamp['nama'] }}
-                            ({{ $stamp['jabatan'] }})
-                            <br>
-                            Disetujui: {{ $stamp['timestamp'] }}<br>
-                            <span class="doc-vr-hash">SHA256: {{ $stamp['hash'] }}</span>
-                        </div>
-                    @endforeach
+            {{-- ── QR CODE VERIFIKASI ── --}}
+            @if ($qrCodeUri)
+                <div class="doc-qr-section">
+                    <table style="width:100%;border:0;border-collapse:collapse;">
+                        <tr>
+                            <td style="width:92px;vertical-align:middle;padding-right:12px;">
+                                <img src="{{ $qrCodeUri }}" style="width:82px;height:82px;display:block;"
+                                    alt="QR Verifikasi">
+                            </td>
+                            <td style="vertical-align:middle;">
+                                <div class="doc-qr-title">Verifikasi Dokumen &mdash; eFRUID System</div>
+                                <div class="doc-qr-text">
+                                    Scan QR Code untuk memverifikasi keaslian dokumen ini secara digital.
+                                    Halaman verifikasi menampilkan seluruh rekam proses persetujuan
+                                    yang tercatat dalam sistem eFRUID.
+                                </div>
+                                <div class="doc-qr-code" style="color:#15803d;font-weight:bold;letter-spacing:0.6px;">
+                                    DOKUMEN TERVERIFIKASI SECARA DIGITAL • SISTEM eFRUID </div>
+                            </td>
+                        </tr>
+                    </table>
                 </div>
             @endif
 
         @endif
 
     </div>
+    </x-document-guard>
 </body>
 
 </html>

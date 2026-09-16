@@ -2,76 +2,114 @@
 
 namespace App\Services;
 
+use App\Enums\DocumentRenderMode;
+use App\Enums\StatusPermohonan;
 use App\Models\Permohonan;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class DocumentRenderer
 {
     public function __construct(private SealService $sealService) {}
 
-    public function prepare(Permohonan $p): array
-    {
+    public function prepare(
+        Permohonan $p,
+        DocumentRenderMode $mode = DocumentRenderMode::INTERACTIVE,
+        ?User $viewer = null,
+    ): array {
         $p->loadMissing('pemohon', 'kantor', 'atasan', 'executor');
 
-        $kantor    = $p->kantor?->nama ?? '—';
+        $kantor = $p->kantor?->nama ?? '—';
         $isRangkap = $p->form_type?->value === 'rangkap';
-        $jenis     = $p->jenis_permohonan?->value ?? '';
-        $tipePerub = $p->tipe_perubahan?->value  ?? '';
+        $jenis = $p->jenis_permohonan?->value ?? '';
+        $tipePerub = $p->tipe_perubahan?->value ?? '';
 
-        $stamps        = $p->verification_stamps ?? [];
-        $stampPemohon  = collect($stamps)->firstWhere('role', 'Pemohon');
-        $stampAtasan   = collect($stamps)->firstWhere('role', 'Atasan');
-        $stampDirut    = collect($stamps)->firstWhere('role', 'Direktur Utama');
+        $stamps = $p->verification_stamps ?? [];
+        $stampPemohon = collect($stamps)->firstWhere('role', 'Pemohon');
+        $stampAtasan = collect($stamps)->firstWhere('role', 'Atasan');
+        $stampDirut = collect($stamps)->firstWhere('role', 'Direktur Utama');
         $stampExecutor = collect($stamps)->firstWhere('role', 'Administrator USSI');
 
         return [
-            'p'           => $p,
-            'tgl'         => $p->tanggal_permohonan
+            'p' => $p,
+            'tgl' => $p->tanggal_permohonan
                 ? $p->tanggal_permohonan->locale('id')->isoFormat('D MMMM Y')
                 : Carbon::today()->locale('id')->isoFormat('D MMMM Y'),
             'kantorLabel' => $kantor === 'PUSAT' ? 'PUSAT' : 'CABANG ' . $kantor,
-            'kotaLabel'   => $kantor === 'PUSAT'
+            'kotaLabel' => $kantor === 'PUSAT'
                 ? 'Pare'
                 : ucfirst(strtolower($kantor)),
-            'isRangkap'   => $isRangkap,
-            'jenis'       => $jenis,
-            'tipePerub'   => $tipePerub,
+            'isRangkap' => $isRangkap,
+            'jenis' => $jenis,
+            'tipePerub' => $tipePerub,
 
             // Checkbox marks
             'cbPendaftaran' => $jenis === 'pendaftaran' ? '&radic;' : '&nbsp;',
-            'cbPerubahan'   => $jenis === 'perubahan'   ? '&radic;' : '&nbsp;',
-            'cbNonaktif'    => $jenis === 'nonaktif'    ? '&radic;' : '&nbsp;',
-            'cbPermanen'    => ($jenis === 'perubahan' && $tipePerub === 'permanen')
+            'cbPerubahan' => $jenis === 'perubahan' ? '&radic;' : '&nbsp;',
+            'cbNonaktif' => $jenis === 'nonaktif' ? '&radic;' : '&nbsp;',
+            'cbPermanen' => ($jenis === 'perubahan' && $tipePerub === 'permanen')
                 ? '&radic;' : '&nbsp;',
-            'cbSementara'   => ($jenis === 'perubahan' && $tipePerub === 'sementara')
+            'cbSementara' => ($jenis === 'perubahan' && $tipePerub === 'sementara')
                 ? '&radic;' : '&nbsp;',
 
             // Tanggal format pendek
             'tglPermanen' => $p->tgl_permanen
                 ? Carbon::parse($p->tgl_permanen)->locale('id')->isoFormat('D MMM Y') : '',
-            'tglMulai'    => $p->tgl_mulai
+            'tglMulai' => $p->tgl_mulai
                 ? Carbon::parse($p->tgl_mulai)->locale('id')->isoFormat('D MMM Y') : '',
-            'tglSelesai'  => $p->tgl_selesai
+            'tglSelesai' => $p->tgl_selesai
                 ? Carbon::parse($p->tgl_selesai)->locale('id')->isoFormat('D MMM Y') : '',
             'tglNonaktif' => $p->tgl_nonaktif
                 ? Carbon::parse($p->tgl_nonaktif)->locale('id')->isoFormat('D MMM Y') : '',
 
             // Personal Digital Seal — di-generate dari stamp.
             // Fallback ke PNG lama (toBase64Uri) untuk dokumen lama yang belum punya stamp.
-            'sealPemohon'  => $stampPemohon  ? $this->sealService->generate($stampPemohon)  : $this->toBase64Uri($p->ttd_pemohon_path),
-            'sealAtasan'   => $stampAtasan   ? $this->sealService->generate($stampAtasan)   : $this->toBase64Uri($p->ttd_atasan_path),
-            'sealDirut'    => $stampDirut    ? $this->sealService->generate($stampDirut)    : $this->toBase64Uri($p->ttd_dirut_path),
+            'sealPemohon' => $stampPemohon ? $this->sealService->generate($stampPemohon) : $this->toBase64Uri($p->ttd_pemohon_path),
+            'sealAtasan' => $stampAtasan ? $this->sealService->generate($stampAtasan) : $this->toBase64Uri($p->ttd_atasan_path),
+            'sealDirut' => $stampDirut ? $this->sealService->generate($stampDirut) : $this->toBase64Uri($p->ttd_dirut_path),
             'sealExecutor' => $stampExecutor ? $this->sealService->generate($stampExecutor) : $this->toBase64Uri($p->ttd_executor_path),
 
             // Stamps — tetap dikirim untuk verification record di bagian bawah dokumen
-            'stamps'        => $stamps,
-            'stampAtasan'   => $stampAtasan,
-            'stampDirut'    => $stampDirut,
+            'stamps' => $stamps,
+            'stampAtasan' => $stampAtasan,
+            'stampDirut' => $stampDirut,
             'stampExecutor' => $stampExecutor,
 
-            'isExecuted' => $p->status === \App\Enums\StatusPermohonan::EXECUTED,
+            'isExecuted' => $p->status === StatusPermohonan::EXECUTED,
+
+            // QR Code verifikasi — hanya untuk dokumen executed yang punya token
+            'verifikasiToken' => $p->verifikasi_token,
+            'qrCodeUri' => $p->verifikasi_token
+                ? $this->generateQrUri($p->verifikasi_token)
+                : null,
+
+            // Tidak pernah masukkan data viewer ke PDF final. Watermark ini
+            // sengaja hanya ada pada browser viewer untuk deterrence/forensik.
+            'renderMode' => $mode->value,
+            'traceLabel' => $this->traceLabel($p, $mode, $viewer),
         ];
+    }
+
+    private function traceLabel(Permohonan $p, DocumentRenderMode $mode, ?User $viewer)
+    {
+        if (! $mode->isProtectedViewer()) {
+            return null;
+        }
+
+        $timestamp = now('Asia/Jakarta')->format('d/m/Y H:i:s') . ' WIB';
+
+        if ($mode === DocumentRenderMode::PUBLIC) {
+            // The public verification token is already the document's public
+            // identifier. The timestamp can be correlated with the audit log.
+            return sprintf(
+                'VERIFIKASI PUBLIK • %s • %s • REF %s',
+                $p->nomor_dokumen ?? 'FRUID',
+                $timestamp,
+                strtoupper(substr((string) $p->verifikasi_token, -8)),
+            );
+        }
     }
 
     /**
@@ -85,6 +123,23 @@ class DocumentRenderer
         }
 
         $binary = Storage::get($storagePath);
+
         return 'data:image/png;base64,' . base64_encode($binary);
+    }
+
+    /**
+     * Generate QR Code sebagai base64 data URI.
+     * Format PNG — kompatibel dengan dompdf dan browser.
+     */
+    private function generateQrUri(string $token): string
+    {
+        $url = route('verifikasi.show', ['token' => $token]);
+
+        $svg = QrCode::format('svg')
+            ->size(180)
+            ->margin(2)
+            ->generate($url);
+
+        return 'data:image/svg+xml;base64,' . base64_encode($svg);
     }
 }

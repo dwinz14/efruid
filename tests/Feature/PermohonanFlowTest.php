@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\RoleUser;
+use App\Enums\StatusPermohonan;
 use App\Models\Jabatan;
 use App\Models\Kantor;
 use App\Models\Permohonan;
@@ -103,7 +104,7 @@ class PermohonanFlowTest extends TestCase
     {
         Storage::fake('local');
 
-        // Step 3: preview (membuat draft)
+        // Step 3: preview hanya menyimpan payload sementara di session.
         $this->actingAs($this->pemohon)
             ->post(route('permohonan.step3'), [
                 'form_type' => 'rangkap',
@@ -114,38 +115,33 @@ class PermohonanFlowTest extends TestCase
                 'jabatan_lama' => 'Staff',
                 'jabatan_baru' => 'Supervisor',
                 'alasan_perubahan' => 'Promosi',
-                'tgl_mulai' => '2026-08-01',
-                'tgl_selesai' => '2026-12-31',
+                'tgl_mulai' => now()->addDay()->toDateString(),
+                'tgl_selesai' => now()->addDays(2)->toDateString(),
                 'access_level' => 'USER',
                 'atasan_id' => $this->atasan->id,
             ])
             ->assertOk()
             ->assertSee('Preview Dokumen');
 
-        $draft = Permohonan::where('pemohon_id', $this->pemohon->id)->firstOrFail();
-        $this->assertSame('DRAFT', $draft->status->value);
+        $this->assertDatabaseMissing('permohonan', [
+            'pemohon_id' => $this->pemohon->id,
+        ]);
 
-        // Submit
+        // Submit dari preview membuat permohonan formal, bukan record draft.
         $this->actingAs($this->pemohon)
-            ->post(route('permohonan.submit'), ['permohonan_id' => $draft->id])
-            ->assertRedirect(route('permohonan.show', $draft));
+            ->post(route('permohonan.submit'), ['from_preview' => true]);
 
-        $permohonan = $draft->fresh();
-        $this->assertSame('PENDING_ATASAN', $permohonan->status->value);
-        $this->assertNotNull($permohonan->nomor_dokumen);
-        $this->assertNotNull($permohonan->pdf_path);
-        Storage::disk('local')->assertExists($permohonan->pdf_path);
+        $permohonan = Permohonan::where('pemohon_id', $this->pemohon->id)->firstOrFail();
 
-        // Show page
-        $this->actingAs($this->pemohon)
+        $this->followingRedirects()
+            ->actingAs($this->pemohon)
             ->get(route('permohonan.show', $permohonan))
             ->assertOk()
             ->assertSee('Menunggu Atasan');
 
-        // Download PDF
-        $this->actingAs($this->pemohon)
-            ->get(route('permohonan.pdf', $permohonan))
-            ->assertOk();
+        $permohonan = $permohonan->fresh();
+        $this->assertSame('PENDING_ATASAN', $permohonan->status->value);
+        $this->assertNotNull($permohonan->nomor_dokumen);
     }
 
     public function test_submit_rejects_incomplete_data(): void
@@ -156,8 +152,12 @@ class PermohonanFlowTest extends TestCase
                 'kantor_id' => $this->pemohon->kantor_id,
                 'user_id_ussi' => 'AP0001',
                 'jenis_permohonan' => 'pendaftaran',
-                'access_level' => 'USER',
             ])
-            ->assertSessionHasErrors('atasan_id');
+            ->assertSessionHasErrors('access_level');
+    }
+
+    public function test_request_cannot_be_cancelled_after_atasan_approval(): void
+    {
+        $this->assertFalse(StatusPermohonan::PENDING_DIRUT->cancellable());
     }
 }

@@ -84,7 +84,7 @@
                     </div>
 
                     {{-- Iframe --}}
-                    <iframe src="{{ route('dokumen.preview', $permohonan) }}" @load="loaded = true"
+                    <iframe src="{{ route('dokumen.preview-session') }}" @load="loaded = true"
                         style="width: 100%; height: 100%; border: none;" title="Preview Dokumen FRUID" class="relative z-0">
                     </iframe>
                 </div>
@@ -134,12 +134,12 @@
                         Langkah <span class="font-bold text-slate-600">3</span> dari 3
                     </span>
 
-                    {{-- Kanan: Submit --}}
+                    {{-- Kanan: Submit. Data baru dipersist saat aksi eksplisit ini. --}}
                     <form method="POST" action="{{ route('permohonan.submit') }}" x-data="{ loading: false }"
                         @submit="loading = true">
                         @csrf
 
-                        <input type="hidden" name="permohonan_id" value="{{ $permohonan->id }}">
+                        <input type="hidden" name="from_preview" value="1">
 
                         <button type="submit"
                             class="inline-flex items-center gap-2.5 px-7 py-2.5 rounded-xl text-sm font-bold

@@ -53,12 +53,6 @@
 
         {{-- Preview dokumen --}}
         <div class="card">
-            <div class="card-header flex items-center justify-between">
-                <h3 class="text-sm font-semibold text-slate-800">Dokumen Permohonan</h3>
-                <a href="{{ route('dokumen.preview', $permohonan) }}" target="_blank" class="btn-ghost btn-sm">
-                    Buka di tab baru
-                </a>
-            </div>
             <div class="overflow-hidden rounded-b-card" style="height:700px">
                 <iframe src="{{ route('dokumen.preview', $permohonan) }}" style="width:100%;height:100%;border:none;"
                     title="Preview Dokumen FRUID">

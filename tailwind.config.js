@@ -19,6 +19,7 @@ export default {
                 sans: ['"IBM Plex Sans"', ...defaultTheme.fontFamily.sans],
             },
             colors: {
+                emerald: { 50: '#ecfdf5', 100: '#d1fae5', 500: '#10b981', 600: '#059669', 700: '#047857', 900: '#064e3b' },
                 // Warna corporate BPR Artha Pamenang
                 brand: {
                     50: "#eff6ff",
@@ -38,6 +39,10 @@ export default {
                     card: "#ffffff",
                     border: "#e2e8f0",
                 },
+            },
+            fontFamily: {
+                sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                mono: ['Courier New', 'Courier', 'monospace'],
             },
             boxShadow: {
                 card: "0 1px 3px 0 rgb(0 0 0 / 0.07), 0 1px 2px -1px rgb(0 0 0 / 0.07)",

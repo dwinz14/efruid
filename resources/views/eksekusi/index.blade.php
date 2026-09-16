@@ -233,8 +233,10 @@
                                 @php
                                     $myId = auth()->id();
                                     $isMine = $item->isClaimedBy($myId);
+                                    $isOwnPermohonan = $item->pemohon_id === $myId;
                                 @endphp
-                                <tr class="transition-colors hover:bg-slate-50/80 {{ $isMine ? 'bg-brand-50/30' : '' }}">
+                                <tr
+                                    class="transition-colors hover:bg-slate-50/80 {{ $isMine ? 'bg-brand-50/30' : ($isOwnPermohonan ? 'bg-amber-50/40' : '') }}">
                                     {{-- Dokumen & Tipe --}}
                                     <td class="px-5 py-4">
                                         <div class="flex items-center gap-2">
@@ -299,7 +301,13 @@
 
                                     {{-- Status Klaim --}}
                                     <td class="px-4 py-4">
-                                        @if (!$item->isClaimed())
+                                        @if ($isOwnPermohonan)
+                                            <span
+                                                class="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2.5 py-1">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                                Permohonan Saya
+                                            </span>
+                                        @elseif (!$item->isClaimed())
                                             <span
                                                 class="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2.5 py-1">
                                                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
@@ -329,7 +337,30 @@
                                     {{-- Aksi --}}
                                     <td class="px-5 py-4 text-right">
                                         <div class="flex items-center justify-end gap-2">
-                                            @if (!$item->isClaimed())
+                                            @if ($isOwnPermohonan)
+                                                {{-- Permohonan milik sendiri: tidak bisa diklaim --}}
+                                                <span
+                                                    class="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-amber-600 bg-amber-50 border border-amber-200 rounded-lg cursor-not-allowed"
+                                                    title="Tidak dapat mengeksekusi permohonan milik sendiri">
+                                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"
+                                                        stroke="currentColor" stroke-width="2">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                                    </svg>
+                                                    Milik Saya
+                                                </span>
+                                                <a href="{{ route('eksekusi.show', $item) }}"
+                                                    class="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors">
+                                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"
+                                                        stroke="currentColor" stroke-width="2">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                    </svg>
+                                                    Lihat
+                                                </a>
+                                            @elseif (!$item->isClaimed())
                                                 {{-- Belum diklaim: Tombol Ambil --}}
                                                 <form action="{{ route('eksekusi.claim', $item) }}" method="POST">
                                                     @csrf
