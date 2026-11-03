@@ -50,7 +50,7 @@
 
             <div class="flex items-center gap-3 flex-shrink-0">
                 <span
-                    class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold border shadow-xs {{ $permohonan->status->badgeClass() }}">
+                    class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold border {{ $permohonan->status->badgeClass() }}">
                     <span class="w-2 h-2 rounded-full bg-current opacity-75"></span>
                     Status: {{ $permohonan->status->label() }}
                 </span>
@@ -212,7 +212,7 @@
                                                 onsubmit="return confirm('Lepas klaim permohonan ini?')">
                                                 @csrf
                                                 <button type="submit"
-                                                    class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs bg-amber-600 text-white hover:bg-amber-700 shadow-xs transition-all active:scale-98">
+                                                    class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs bg-amber-600 text-white hover:bg-amber-700 transition-all active:scale-98">
                                                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24"
                                                         stroke="currentColor" stroke-width="2">
                                                         <path stroke-linecap="round" stroke-linejoin="round"
@@ -455,7 +455,7 @@
                                 <div class="mt-4 pt-3 border-t border-slate-100">
                                     @if ($permohonan->pdf_path)
                                         <a href="{{ route('permohonan.pdf', $permohonan) }}" target="_blank"
-                                            class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 rounded-xl shadow-xs transition-all active:scale-98">
+                                            class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 rounded-xl transition-all active:scale-98">
                                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24"
                                                 stroke="currentColor" stroke-width="2">
                                                 <path stroke-linecap="round" stroke-linejoin="round"

@@ -88,7 +88,7 @@
         </div>
 
         <div class="flex items-center gap-3 pt-2">
-            <button type="submit" class="btn-primary text-xs sm:text-sm px-5 py-2.5 shadow-xs">
+            <button type="submit" class="btn-primary text-xs sm:text-sm px-5 py-2.5">
                 {{ __('Perbarui Password') }}
             </button>
 

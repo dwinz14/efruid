@@ -10,7 +10,7 @@
 
     <div>
         <button type="button" x-data="" x-on:click.prevent="$dispatch('open-modal', 'confirm-user-deletion')"
-            class="btn-danger text-xs sm:text-sm px-4 py-2.5 shadow-xs">
+            class="btn-danger text-xs sm:text-sm px-4 py-2.5">
             {{ __('Hapus Akun Ini') }}
         </button>
     </div>
@@ -51,7 +51,7 @@
                 <button type="button" x-on:click="$dispatch('close')" class="btn-secondary text-xs sm:text-sm px-4 py-2">
                     {{ __('Batal') }}
                 </button>
-                <button type="submit" class="btn-danger text-xs sm:text-sm px-4 py-2 shadow-xs">
+                <button type="submit" class="btn-danger text-xs sm:text-sm px-4 py-2">
                     {{ __('Ya, Hapus Akun') }}
                 </button>
             </div>

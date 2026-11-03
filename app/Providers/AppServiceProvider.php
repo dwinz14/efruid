@@ -7,6 +7,8 @@ use App\Models\Permohonan;
 use App\Policies\PermohonanPolicy;
 use App\Policies\ApprovalPolicy;
 use Illuminate\Support\Facades\Gate;
+use App\View\Composers\SidebarComposer;
+use Illuminate\Support\Facades\View;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -29,5 +31,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('approveAsDirut',  [ApprovalPolicy::class, 'approveAsDirut']);
         Gate::define('rejectPermohonan', [ApprovalPolicy::class, 'reject']);
         Gate::define('revisePermohonan', [ApprovalPolicy::class, 'revise']);
+
+        View::composer('layouts.partials.sidebar-nav', SidebarComposer::class);
     }
 }

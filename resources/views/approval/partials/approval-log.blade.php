@@ -27,7 +27,7 @@
                 @endphp
                 <div class="relative group">
                     {{-- Timeline Marker Dot --}}
-                    <div class="absolute -left-[30px] top-0.5 w-5 h-5 rounded-full {{ $dotBg }} ring-4 flex items-center justify-center shadow-xs">
+                    <div class="absolute -left-[30px] top-0.5 w-5 h-5 rounded-full {{ $dotBg }} ring-4 flex items-center justify-center">
                         @if ($isApprove)
                             <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />

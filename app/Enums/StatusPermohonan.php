@@ -29,9 +29,9 @@ enum StatusPermohonan: string
     {
         return match ($this) {
             self::DRAFT => 'badge-draft',
-            self::PENDING_ATASAN,
-            self::PENDING_DIRUT,
-            self::PENDING_IT => 'badge-pending',
+            self::PENDING_ATASAN => 'badge-pending-atasan',
+            self::PENDING_DIRUT => 'badge-pending-dirut',
+            self::PENDING_IT => 'badge-pending-it',
             self::EXECUTED => 'badge-executed',
             self::REJECTED => 'badge-rejected',
             self::CANCELLED => 'badge-cancelled',

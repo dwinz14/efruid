@@ -146,7 +146,7 @@
                                 {{ $item['count'] }}
                             </span>
                             <div class="w-full bg-slate-100 rounded-t-xl overflow-hidden flex items-end h-full">
-                                <div class="w-full bg-gradient-to-t from-brand-700 to-brand-500 group-hover:from-brand-600 group-hover:to-brand-400 rounded-t-xl transition-all duration-300 shadow-xs"
+                                <div class="w-full bg-gradient-to-t from-brand-700 to-brand-500 group-hover:from-brand-600 group-hover:to-brand-400 rounded-t-xl transition-all duration-300"
                                     style="height: {{ max($height, 6) }}%"></div>
                             </div>
                             <span class="text-xs font-bold text-slate-400 whitespace-nowrap mt-1">
@@ -190,7 +190,7 @@
                     <a href="{{ route($s['route']) }}"
                         class="flex items-center justify-between p-3 rounded-xl border border-slate-200/80 hover:border-brand-300 bg-slate-50/50 hover:bg-brand-50/30 transition-all group">
                         <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-lg bg-white border border-slate-200 text-slate-600 group-hover:text-brand-600 flex items-center justify-center flex-shrink-0 shadow-xs">
+                            <div class="w-8 h-8 rounded-lg bg-white border border-slate-200 text-slate-600 group-hover:text-brand-600 flex items-center justify-center flex-shrink-0">
                                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="{{ $s['icon'] }}" />
                                 </svg>
@@ -209,7 +209,7 @@
 
             <div class="p-4 pt-0">
                 <a href="{{ route('admin.security.index') }}"
-                    class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow-xs transition-colors">
+                    class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition-colors">
                     <svg class="w-4 h-4 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                     </svg>
@@ -378,7 +378,7 @@
             @foreach ($secItems as $item)
                 @php $c = $secColor[$item['color']]; @endphp
                 <a href="{{ $item['link'] }}"
-                    class="rounded-2xl p-4 text-center border {{ $c['border'] }} {{ $c['bg'] }} shadow-xs hover:shadow-md transition-all group">
+                    class="rounded-2xl p-4 text-center border {{ $c['border'] }} {{ $c['bg'] }} hover:shadow-md transition-all group">
                     <p class="text-2xl font-extrabold {{ $c['num'] }} group-hover:scale-105 transition-transform">{{ $item['value'] }}</p>
                     <p class="text-[11px] font-bold text-slate-500 mt-1 leading-tight">{{ $item['label'] }}</p>
                 </a>

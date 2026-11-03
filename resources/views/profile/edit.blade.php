@@ -17,7 +17,7 @@
                             {{ strtoupper(substr($user->name ?? 'U', 0, 1)) }}
                         </div>
                         <span
-                            class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-2 border-white flex items-center justify-center shadow-xs"
+                            class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-2 border-white flex items-center justify-center"
                             title="Akun Aktif">
                             <span class="w-2 h-2 rounded-full bg-white"></span>
                         </span>
@@ -274,7 +274,7 @@
 
                     {{-- Action Button --}}
                     <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-end">
-                        <button type="submit" class="btn-primary text-xs sm:text-sm px-6 py-2.5 shadow-xs"
+                        <button type="submit" class="btn-primary text-xs sm:text-sm px-6 py-2.5"
                             :disabled="loading">
                             <svg x-show="loading" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
@@ -424,7 +424,7 @@
                     </div>
 
                     <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-end">
-                        <button type="submit" class="btn-primary text-xs sm:text-sm px-6 py-2.5 shadow-xs"
+                        <button type="submit" class="btn-primary text-xs sm:text-sm px-6 py-2.5"
                             :disabled="loading">
                             <svg x-show="loading" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"

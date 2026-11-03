@@ -27,7 +27,7 @@
                     class="flex items-center justify-between gap-4 px-5 sm:px-6 py-4 border-b border-slate-100 bg-white flex-shrink-0">
                     <div class="flex items-center gap-3.5 min-w-0">
                         <div
-                            class="w-10 h-10 rounded-xl bg-brand-50 border border-brand-100 flex items-center justify-center flex-shrink-0 text-brand-600 shadow-xs">
+                            class="w-10 h-10 rounded-xl bg-brand-50 border border-brand-100 flex items-center justify-center flex-shrink-0 text-brand-600">
                             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
                                 stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -56,7 +56,7 @@
                     {{-- Kontrol Aksi Header --}}
                     <div class="flex items-center gap-2 flex-shrink-0">
                         {{-- Status Badge --}}
-                        <span class="text-xs px-3 py-1 rounded-full font-semibold border shadow-xs"
+                        <span class="text-xs px-3 py-1 rounded-full font-semibold border"
                             :class="statusClass" x-text="status"></span>
 
                         {{-- Tombol Tutup (X) --}}

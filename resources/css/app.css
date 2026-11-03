@@ -1,5 +1,4 @@
 /* resources/css/app.css */
-@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -20,6 +19,38 @@
     h3,
     h4 {
         @apply font-semibold tracking-tight text-slate-900;
+    }
+}
+
+/* Alpine: sembunyikan elemen x-cloak sampai Alpine aktif */
+[x-cloak] {
+    display: none !important;
+}
+
+/*
+ * Sidebar mobile
+ */
+@media (max-width: 1023.98px) {
+    #sidebar {
+        transform: translateX(-100%);
+        visibility: hidden;
+        transition:
+            transform 0.3s ease-in-out,
+            visibility 0s linear 0.3s;
+    }
+
+    #sidebar[data-open="true"] {
+        transform: translateX(0);
+        visibility: visible;
+        transition:
+            transform 0.3s ease-in-out,
+            visibility 0s;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #sidebar {
+        transition: none !important;
     }
 }
 
@@ -142,35 +173,47 @@
         @apply mt-1 text-xs text-red-600;
     }
 
-    /* Badge status */
+    /* Badge status — dipetakan dari StatusPermohonan::badgeClass() */
     .badge {
         @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium whitespace-nowrap;
     }
 
     .badge-draft {
-        @apply badge bg-slate-100 text-slate-600;
+        @apply badge bg-slate-100 text-slate-700;
     }
 
-    .badge-pending {
-        @apply badge bg-yellow-100 text-yellow-700;
+    .badge-pending-atasan {
+        @apply badge bg-amber-100 text-amber-800;
     }
 
-    .badge-approved {
-        @apply badge bg-green-100 text-green-700;
+    .badge-pending-dirut {
+        @apply badge bg-purple-100 text-purple-700;
+    }
+
+    .badge-pending-it {
+        @apply badge bg-brand-100 text-brand-700;
+    }
+
+    .badge-executed {
+        @apply badge bg-emerald-100 text-emerald-700;
     }
 
     .badge-rejected {
         @apply badge bg-red-100 text-red-700;
     }
 
-    .badge-executed {
-        @apply badge bg-brand-100 text-brand-700;
-    }
-
     .badge-cancelled {
-        @apply badge bg-slate-200 text-slate-500;
+        @apply badge bg-slate-200 text-slate-600;
     }
 
+    /* Alias lama: masih dipakai langsung di beberapa view */
+    .badge-pending {
+        @apply badge bg-amber-100 text-amber-800;
+    }
+
+    .badge-approved {
+        @apply badge bg-emerald-100 text-emerald-700;
+    }
     /* Stepper */
     .stepper-step {
         @apply flex items-center gap-3 text-sm font-medium;
@@ -223,7 +266,7 @@
     }
 
     .alert-warning {
-        @apply alert bg-yellow-50 border-yellow-200 text-yellow-800;
+        @apply alert bg-amber-50 border-amber-200 text-amber-800;
     }
 
     .alert-danger {
@@ -231,7 +274,7 @@
     }
 
     .alert-success {
-        @apply alert bg-green-50 border-green-200 text-green-800;
+        @apply alert bg-emerald-50 border-emerald-200 text-emerald-800;
     }
 
     /* Toast */
@@ -240,7 +283,7 @@
     }
 
     .toast-success {
-        @apply toast bg-green-50 border-green-200 text-green-800;
+        @apply toast bg-emerald-50 border-emerald-200 text-emerald-800;
     }
 
     .toast-error {
@@ -252,7 +295,7 @@
     }
 
     .toast-warning {
-        @apply toast bg-yellow-50 border-yellow-200 text-yellow-800;
+        @apply toast bg-amber-50 border-amber-200 text-amber-800;
     }
 
     /* Approval action card */
@@ -261,7 +304,7 @@
     }
 
     .approval-action-approve {
-        @apply border-green-200 bg-green-50 hover:border-green-400;
+        @apply border-emerald-200 bg-emerald-50 hover:border-emerald-400;
     }
 
     .approval-action-reject {
@@ -287,11 +330,11 @@
     }
 
     .approval-btn-approve {
-        @apply border-slate-200 text-slate-600 hover:border-green-300 hover:bg-green-50;
+        @apply border-slate-200 text-slate-600 hover:border-emerald-300 hover:bg-emerald-50;
     }
 
     .approval-btn-approve-active {
-        @apply border-green-500 bg-green-50 text-green-700;
+        @apply border-emerald-500 bg-emerald-50 text-emerald-700;
     }
 
     .approval-btn-reject {
@@ -343,6 +386,30 @@
         border-radius: 2px;
     }
 
+        /* Scrollbar tipis untuk area konten & panel */
+    .custom-scrollbar {
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e1 transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background-color: #cbd5e1;
+        border-radius: 20px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background-color: #94a3b8;
+    }
+
     /* Responsive table wrapper */
     .table-responsive {
         @apply overflow-x-auto -mx-4 sm:mx-0;
@@ -376,14 +443,14 @@
     }
 
     .animate-fade-up {
-        animation: fade-up 0.6s ease-out both;
+        animation: fade-up 0.25s ease-out both;
     }
 }
 
 @keyframes fade-up {
     from {
         opacity: 0;
-        transform: translateY(14px);
+        transform: translateY(8px);
     }
 
     to {

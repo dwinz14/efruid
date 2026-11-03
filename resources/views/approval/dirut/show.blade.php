@@ -44,13 +44,13 @@
                 {{-- Context Role Badge --}}
                 @if ($canApproveAsAtasan)
                     <span
-                        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-purple-50 text-purple-700 border border-purple-200 shadow-xs">
+                        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-purple-50 text-purple-700 border border-purple-200">
                         <span class="w-2 h-2 rounded-full bg-purple-500"></span>
                         Sebagai Atasan Langsung
                     </span>
                 @elseif($canApproveAsDirut)
                     <span
-                        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200 shadow-xs">
+                        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
                         <span class="w-2 h-2 rounded-full bg-blue-500"></span>
                         Sebagai Direktur Utama
                     </span>
@@ -58,7 +58,7 @@
 
                 {{-- Status Badge --}}
                 <span
-                    class="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-xl text-xs font-bold border shadow-xs {{ $permohonan->status->badgeClass() }}">
+                    class="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-xl text-xs font-bold border {{ $permohonan->status->badgeClass() }}">
                     Status: {{ $permohonan->status->label() }}
                 </span>
             </div>
@@ -212,7 +212,7 @@
                                 'border-emerald-500 bg-emerald-50/70 shadow-sm shadow-emerald-500/10' :
                                 'border-slate-200 hover:border-slate-300 hover:bg-emerald-100'">
                             <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors"
-                                :class="action === 'approve' ? 'bg-emerald-600 text-white shadow-xs' :
+                                :class="action === 'approve' ? 'bg-emerald-600 text-white' :
                                     'bg-slate-100 text-slate-500'">
                                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
                                     stroke-width="2.5">
@@ -239,7 +239,7 @@
                                 'border-red-500 bg-red-50/70 shadow-sm shadow-red-500/10' :
                                 'border-slate-200 hover:border-slate-300 hover:bg-red-300'">
                             <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors"
-                                :class="action === 'reject' ? 'bg-red-600 text-white shadow-xs' :
+                                :class="action === 'reject' ? 'bg-red-600 text-white' :
                                     'bg-slate-100 text-slate-500'">
                                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
                                     stroke-width="2.5">

@@ -2,6 +2,8 @@ import "./bootstrap";
 
 import Alpine from "alpinejs";
 import typewriter from "./components/typewriter";
+import '@fontsource-variable/inter';
+import notificationBell from "./components/notification-bell";
 
 window.Alpine = Alpine;
 
@@ -22,6 +24,7 @@ window.showToast = (message, type = "success") => {
 };
 
 Alpine.data("typewriter", typewriter);
+Alpine.data("notificationBell", notificationBell);
 
 Alpine.data("permohonanForm", (config = {}) => ({
     jenis: config.jenis ?? "pendaftaran",

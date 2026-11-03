@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Permohonan;
+use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,21 +23,27 @@ class NotificationController extends Controller
 
     // ── Ambil 10 notif terbaru (untuk dropdown) ───────────────────────────
 
-    public function index(): JsonResponse
+    public function index(NotificationService $notifier): JsonResponse
     {
-        $notifications = auth()->user()
-            ->notifications()
-            ->latest()
-            ->take(10)
-            ->get()
-            ->map(fn($n) => [
-                'id'         => $n->id,
-                'data'       => $n->data,
-                'read'       => ! is_null($n->read_at),
-                'created_at' => $n->created_at
-                    ->locale('id')
-                    ->diffForHumans(),
-            ]);
+        $user  = auth()->user();
+        $items = $user->notifications()->latest()->take(10)->get();
+
+        $permohonans = Permohonan::whereIn(
+            'id',
+            $items->pluck('data.permohonan_id')->filter()->unique()
+        )->get()->keyBy('id');
+
+        $notifications = $items->map(fn($n) => [
+            'id'         => $n->id,
+            'data'       => $n->data,
+            'read'       => ! is_null($n->read_at),
+            'created_at' => $n->created_at->locale('id')->diffForHumans(),
+            'url'        => $notifier->resolveUrl(
+                $user,
+                $n->data,
+                $permohonans->get($n->data['permohonan_id'] ?? null),
+            ),
+        ]);
 
         return response()->json(['notifications' => $notifications]);
     }

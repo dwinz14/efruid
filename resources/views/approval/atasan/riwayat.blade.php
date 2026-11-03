@@ -207,7 +207,7 @@
                                     <td class="px-5 sm:px-6 py-4 text-center">
                                         @if ($isApproved)
                                             <span
-                                                class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-xs">
+                                                class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
                                                 <svg class="w-3.5 h-3.5 text-emerald-600" fill="none"
                                                     viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -217,7 +217,7 @@
                                             </span>
                                         @elseif ($log?->aksi === 'rejected')
                                             <span
-                                                class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-200 shadow-xs">
+                                                class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-200">
                                                 <svg class="w-3.5 h-3.5 text-red-600" fill="none" viewBox="0 0 24 24"
                                                     stroke="currentColor" stroke-width="2.5">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -258,7 +258,7 @@
                                                     status:        '{{ $item->status->label() }}',
                                                     statusClass:   '{{ $item->status->badgeClass() }}'
                                                 })"
-                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-brand-600 bg-brand-50 hover:bg-brand-100 hover:text-brand-700 border border-brand-200/80 transition-all shadow-xs active:scale-95"
+                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-brand-600 bg-brand-50 hover:bg-brand-100 hover:text-brand-700 border border-brand-200/80 transition-all active:scale-95"
                                             title="Lihat Dokumen FRUID">
                                             <svg class="w-4 h-4 text-brand-600" fill="none" viewBox="0 0 24 24"
                                                 stroke="currentColor" stroke-width="2">

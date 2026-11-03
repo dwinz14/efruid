@@ -271,7 +271,7 @@
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                                 <label
                                     class="relative flex items-start gap-3.5 p-4 rounded-xl border-2 cursor-pointer transition-all focus:outline-none select-none"
-                                    :class="isActive === '1' ? 'border-emerald-500 bg-emerald-50/50 shadow-xs' :
+                                    :class="isActive === '1' ? 'border-emerald-500 bg-emerald-50/50' :
                                         'border-slate-200 hover:bg-slate-50'">
                                     <input type="radio" name="is_active" value="1" x-model="isActive"
                                         class="sr-only">
@@ -289,7 +289,7 @@
 
                                 <label
                                     class="relative flex items-start gap-3.5 p-4 rounded-xl border-2 cursor-pointer transition-all focus:outline-none select-none"
-                                    :class="isActive === '0' ? 'border-red-500 bg-red-50/50 shadow-xs' :
+                                    :class="isActive === '0' ? 'border-red-500 bg-red-50/50' :
                                         'border-slate-200 hover:bg-slate-50'">
                                     <input type="radio" name="is_active" value="0" x-model="isActive"
                                         class="sr-only">

@@ -64,6 +64,28 @@ class PermohonanFlowTest extends TestCase
             ->assertSee('Buat Permohonan');
     }
 
+    public function test_layout_menampilkan_flash_warning(): void
+    {
+        $this->actingAs($this->pemohon)
+            ->withSession(['warning' => 'Pesan warning uji'])
+            ->get(route('permohonan.index'))
+            ->assertOk()
+            ->assertSee('Pesan warning uji');
+    }
+
+    public function test_layout_menampilkan_pesan_dari_error_bag(): void
+    {
+        $errors = (new \Illuminate\Support\ViewErrorBag)
+            ->put('default', new \Illuminate\Support\MessageBag(['error' => 'Pesan error uji']));
+
+        $this->actingAs($this->pemohon)
+            ->withSession(['errors' => $errors])
+            ->get(route('permohonan.index'))
+            ->assertOk()
+            ->assertSee('Pesan error uji')
+            ->assertDontSee('Terdapat kesalahan pada form');
+    }
+
     public function test_step1_page_renders_clickable_cards(): void
     {
         $this->actingAs($this->pemohon)

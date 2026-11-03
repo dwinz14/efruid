@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\RoleUser;
+use App\Enums\StatusPermohonan;
 use App\Models\Permohonan;
 use App\Models\User;
 use App\Notifications\PermohonanNotification;
@@ -93,6 +94,51 @@ class NotificationService
             'permohonan_executed',
             "Permohonan {$permohonan->nomor_dokumen} Anda telah selesai dieksekusi. PDF tersedia untuk didownload.",
         ));
+    }
+
+    // ── URL tujuan saat notifikasi diklik (sadar role & status terkini) ───
+
+    public function resolveUrl(User $user, array $data, ?Permohonan $permohonan): string
+    {
+        // Permohonan sudah dihapus / tidak ditemukan
+        if (! $permohonan) {
+            return route('dashboard');
+        }
+
+        $status = $permohonan->status;
+
+        return match ($data['type'] ?? null) {
+            'permohonan_submitted' => $this->urlSebagaiAtasan($user, $permohonan),
+
+            'permohonan_need_dirut' => $status === StatusPermohonan::PENDING_DIRUT
+                ? route('approval.dirut.show', $permohonan)
+                : route('approval.dirut.riwayat'),
+
+            'permohonan_ready_it' => in_array($status, [StatusPermohonan::PENDING_IT, StatusPermohonan::EXECUTED], true)
+                ? route('eksekusi.show', $permohonan)
+                : route('eksekusi.index'),
+
+            'permohonan_rejected',
+            'permohonan_executed' => route('permohonan.show', $permohonan),
+
+            default => route('dashboard'),
+        };
+    }
+
+    private function urlSebagaiAtasan(User $user, Permohonan $permohonan): string
+    {
+        $masihMenunggu = $permohonan->status === StatusPermohonan::PENDING_ATASAN
+            && $permohonan->atasan_id === $user->id;
+
+        if ($user->isDirut()) {
+            return $masihMenunggu
+                ? route('approval.dirut.show', $permohonan)
+                : route('approval.dirut.riwayat');
+        }
+
+        return $masihMenunggu
+            ? route('approval.atasan.show', $permohonan)
+            : route('approval.atasan.riwayat');
     }
 
     // ── Helper ────────────────────────────────────────────────────────────

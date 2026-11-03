@@ -1,4 +1,3 @@
-// tailwind.config.js
 import defaultTheme from "tailwindcss/defaultTheme";
 import forms from "@tailwindcss/forms";
 import typography from "@tailwindcss/typography";
@@ -10,17 +9,15 @@ export default {
         "./storage/framework/views/*.php",
         "./resources/views/**/*.blade.php",
         "./resources/js/**/*.js",
+        "./app/Enums/**/*.php",
     ],
 
     theme: {
         extend: {
             fontFamily: {
-                // IBM Plex Sans — visual language dari eFRUID v1
-                sans: ['"IBM Plex Sans"', ...defaultTheme.fontFamily.sans],
+                sans: ['"Inter Variable"', "Inter", ...defaultTheme.fontFamily.sans],
             },
             colors: {
-                emerald: { 50: '#ecfdf5', 100: '#d1fae5', 500: '#10b981', 600: '#059669', 700: '#047857', 900: '#064e3b' },
-                // Warna corporate BPR Artha Pamenang
                 brand: {
                     50: "#eff6ff",
                     100: "#dbeafe",
@@ -28,7 +25,7 @@ export default {
                     300: "#93c5fd",
                     400: "#60a5fa",
                     500: "#3b82f6",
-                    600: "#1d4ed8", // primary — biru corporate
+                    600: "#1d4ed8", // primary
                     700: "#1e40af",
                     800: "#1e3a8a",
                     900: "#1e3056",
@@ -39,10 +36,6 @@ export default {
                     card: "#ffffff",
                     border: "#e2e8f0",
                 },
-            },
-            fontFamily: {
-                sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
-                mono: ['Courier New', 'Courier', 'monospace'],
             },
             boxShadow: {
                 card: "0 1px 3px 0 rgb(0 0 0 / 0.07), 0 1px 2px -1px rgb(0 0 0 / 0.07)",

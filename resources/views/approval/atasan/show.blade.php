@@ -42,7 +42,7 @@
 
             <div class="flex-shrink-0">
                 <span
-                    class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold border shadow-xs {{ $permohonan->status->badgeClass() }}">
+                    class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold border {{ $permohonan->status->badgeClass() }}">
                     <span class="w-2 h-2 rounded-full bg-current opacity-75"></span>
                     Status: {{ $permohonan->status->label() }}
                 </span>
@@ -173,7 +173,7 @@
                             'border-emerald-500 bg-emerald-50/70 shadow-sm shadow-emerald-500/10' :
                             'border-slate-200 hover:border-slate-300 hover:bg-emerald-100'">
                         <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors"
-                            :class="action === 'approve' ? 'bg-emerald-600 text-white shadow-xs' :
+                            :class="action === 'approve' ? 'bg-emerald-600 text-white' :
                                 'bg-slate-100 text-slate-500'">
                             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
                                 stroke-width="2.5">
@@ -200,7 +200,7 @@
                             'border-red-500 bg-red-50/70 shadow-sm shadow-red-500/10' :
                             'border-slate-200 hover:border-slate-300 hover:bg-red-300'">
                         <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors"
-                            :class="action === 'reject' ? 'bg-red-600 text-white shadow-xs' : 'bg-slate-100 text-slate-500'">
+                            :class="action === 'reject' ? 'bg-red-600 text-white' : 'bg-slate-100 text-slate-500'">
                             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
                                 stroke-width="2.5">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
