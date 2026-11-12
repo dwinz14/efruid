@@ -1,89 +1,57 @@
 @php
-    $steps = [
-        1 => ['label' => 'Jenis Form',       'desc' => 'Pilih tipe permohonan'],
-        2 => ['label' => 'Isi Data',          'desc' => 'Lengkapi informasi'],
-        3 => ['label' => 'Preview & Submit',  'desc' => 'Tinjau & kirim'],
-    ];
+    $steps = [1 => 'Jenis Form', 2 => 'Isi Data', 3 => 'Periksa & Kirim'];
+    $total = count($steps);
 @endphp
 
-<div class="relative">
-    {{-- Background card stepper --}}
-    <div class="bg-white rounded-xl border border-slate-200 shadow-sm px-6 py-5">
-        <div class="flex items-center">
-            @foreach ($steps as $num => $info)
-                @php
-                    $isActive = $num === $step;
-                    $isDone   = $num < $step;
-                    $isLast   = $num === count($steps);
-                @endphp
-
-                {{-- Step item --}}
-                <div class="flex items-center {{ $isLast ? '' : 'flex-1' }}">
-
-                    {{-- Circle + Label --}}
-                    <div class="flex items-center gap-3 flex-shrink-0">
-
-                        {{-- Circle --}}
-                        <div class="relative flex-shrink-0">
-                            @if ($isActive)
-                                {{-- Active: pulse ring --}}
-                                <span class="absolute inset-0 rounded-full bg-brand-500/20 animate-ping"
-                                      style="animation-duration: 2s;"></span>
-                            @endif
-                            <div class="relative w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300
-                                {{ $isDone   ? 'bg-brand-600 text-white shadow-md shadow-brand-500/30' : '' }}
-                                {{ $isActive ? 'bg-brand-600 text-white shadow-lg shadow-brand-500/40 ring-4 ring-brand-100' : '' }}
-                                {{ !$isDone && !$isActive ? 'bg-slate-100 text-slate-400 border-2 border-slate-200' : '' }}">
-                                @if ($isDone)
-                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                @else
-                                    {{ $num }}
-                                @endif
-                            </div>
-                        </div>
-
-                        {{-- Label & Desc --}}
-                        <div class="hidden sm:block">
-                            <p class="text-sm font-semibold leading-none
-                                {{ $isActive ? 'text-brand-700' : ($isDone ? 'text-slate-600' : 'text-slate-400') }}">
-                                {{ $info['label'] }}
-                            </p>
-                            <p class="text-xs mt-0.5
-                                {{ $isActive ? 'text-brand-500' : ($isDone ? 'text-slate-400' : 'text-slate-300') }}">
-                                {{ $info['desc'] }}
-                            </p>
-                        </div>
-                    </div>
-
-                    {{-- Connector line --}}
-                    @if (!$isLast)
-                        <div class="flex-1 mx-4 h-0.5 rounded-full overflow-hidden bg-slate-100">
-                            <div class="h-full rounded-full transition-all duration-500
-                                {{ $isDone ? 'bg-gradient-to-r from-brand-500 to-brand-400 w-full' : 'w-0' }}">
-                            </div>
-                        </div>
-                    @endif
-
-                </div>
-            @endforeach
-        </div>
-
-        {{-- Mobile: step label --}}
-        <div class="sm:hidden mt-3 pt-3 border-t border-slate-100 flex items-center justify-between">
-            <p class="text-xs font-semibold text-brand-700">
-                {{ $steps[$step]['label'] }}
-            </p>
-            <p class="text-xs text-slate-400">
-                Langkah {{ $step }} dari {{ count($steps) }}
-            </p>
+<nav aria-label="Progres pembuatan permohonan" class="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm sm:px-5">
+    {{-- Mobile --}}
+    <div class="sm:hidden">
+        <p class="flex items-center justify-between gap-3 text-sm text-slate-600">
+            <span><span class="font-semibold text-slate-900">Langkah {{ $step }}/{{ $total }}</span> &middot;
+                {{ $steps[$step] }}</span>
+            <span class="text-xs font-medium text-brand-700">{{ round(($step / $total) * 100) }}%</span>
+        </p>
+        <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-200" aria-hidden="true">
+            <div class="h-full rounded-full bg-brand-600" style="width: {{ round(($step / $total) * 100) }}%"></div>
         </div>
     </div>
 
-    {{-- Progress bar thin (below card) --}}
-    <div class="mt-2 h-0.5 bg-slate-100 rounded-full overflow-hidden">
-        <div class="h-full bg-gradient-to-r from-brand-600 to-brand-400 rounded-full transition-all duration-700"
-             style="width: {{ round((($step - 1) / (count($steps) - 1)) * 100) }}%"></div>
-    </div>
-</div>
+    {{-- Desktop --}}
+    <ol class="hidden items-center sm:flex">
+        @foreach ($steps as $num => $label)
+            @php
+                $done = $num < $step;
+                $active = $num === $step;
+            @endphp
+            <li class="flex items-center {{ $num < $total ? 'flex-1' : '' }}"
+                @if ($active) aria-current="step" @endif>
+                <span class="flex items-center gap-2.5">
+                    <span
+                        class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-sm font-semibold transition-colors
+                            {{ $done ? 'bg-brand-600 text-white' : ($active ? 'border-2 border-brand-600 bg-brand-50 text-brand-700' : 'border-2 border-slate-200 bg-white text-slate-500') }}">
+                        @if ($done)
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                stroke-width="3" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                        @else
+                            {{ $num }}
+                        @endif
+                    </span>
+                    <span
+                        class="text-sm {{ $active ? 'font-semibold text-slate-900' : ($done ? 'font-medium text-slate-700' : 'text-slate-500') }}">
+                        {{ $label }}
+                        <span class="sr-only">
+                            ({{ $done ? 'selesai' : ($active ? 'langkah saat ini' : 'belum dikerjakan') }})
+                        </span>
+                    </span>
+                </span>
+
+                @if ($num < $total)
+                    <span class="mx-3 h-px flex-1 {{ $done ? 'bg-brand-600' : 'bg-slate-200' }}"
+                        aria-hidden="true"></span>
+                @endif
+            </li>
+        @endforeach
+    </ol>
+</nav>

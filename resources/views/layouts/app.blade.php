@@ -30,7 +30,7 @@
     </style>
 </head>
 
-<body class="h-full bg-slate-50 text-slate-800 font-sans selection:bg-brand-500 selection:text-white"
+<body class="h-full overflow-hidden bg-slate-50 font-sans text-slate-800 selection:bg-brand-500 selection:text-white"
     x-data="{
         sidebarOpen: false,
         isDesktop: window.matchMedia('(min-width: 1024px)').matches,
@@ -49,7 +49,7 @@
     </a>
 
     {{-- ── Wrapper Utama ── --}}
-    <div class="flex h-full overflow-hidden">
+    <div class="flex h-dvh min-h-0 overflow-hidden">
 
         {{-- Mobile Overlay --}}
         <div x-show="sidebarOpen" x-cloak aria-hidden="true"
@@ -127,7 +127,7 @@
         </aside>
 
         {{-- ── Main Content Area ── --}}
-        <div class="flex-1 flex flex-col min-w-0 bg-slate-50">
+        <div class="flex min-h-0 min-w-0 flex-1 flex-col bg-slate-50">
 
             {{-- Topbar --}}
             <header
@@ -161,7 +161,7 @@
             @endphp
             {{-- ── Main Scrollable Area ── --}}
             <main id="konten" tabindex="-1"
-                class="flex-1 overflow-y-auto overflow-x-hidden p-4 focus:outline-none sm:p-6 lg:p-8 custom-scrollbar">
+                class="custom-scrollbar min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain p-4 focus:outline-none sm:p-6 lg:p-8">
 
                 <div class="{{ $containerWidth }} mx-auto space-y-6">
                     {{-- Flash Messages --}}

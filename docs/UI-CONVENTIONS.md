@@ -10,3 +10,6 @@
 - **Lebar konten:** `@section('width', 'sm|md|lg')`; jangan menulis `max-w-* mx-auto` sendiri di halaman.
 - **Pesan flash:** lewat `with('success'|'info'|'warning'|'error')` atau `withErrors(['error' => ...])`; ditampilkan oleh layout.
 - **Kelas Tailwind dari PHP:** simpan di `app/Enums` (sudah masuk `content`) atau tambahkan path-nya ke `tailwind.config.js`.
+- **Form:** bungkus tiap kolom dengan `<x-field name label [required] [optional] [hint]>`; kontrolnya wajib memakai `id` = `name`, `aria-describedby="{name}-hint {name}-error"`, dan `aria-invalid="true"` saat error. Grup pilihan = `<fieldset>` + `<legend>` + `<x-choice-card>`.
+- **Kartu bagian form:** `<x-form-section title description>`; alert inline: `<x-alert type="success|info|warning|danger" [title] [dismissible]>`; spinner: `<x-spinner />`.
+- **Wizard:** stepper = `permohonan.partials.stepper`; bilah aksi = `<x-wizard-actions>` (slot `back` + aksi); tombol aksi `min-h-11`.
