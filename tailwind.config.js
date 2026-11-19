@@ -28,22 +28,24 @@ export default {
                     600: "#1d4ed8", // primary
                     700: "#1e40af",
                     800: "#1e3a8a",
-                    900: "#1e3056",
-                    950: "#0f172a",
+                    900: "#172554", // biru dongker (identitas: sidebar, aksi gelap)
+                    950: "#0b1530", // dongker terdalam (hover/tekan, panel brand auth)
                 },
                 surface: {
-                    DEFAULT: "#f8fafc",
+                    DEFAULT: "#eef2f7", // kanvas halaman
                     card: "#ffffff",
                     border: "#e2e8f0",
                 },
             },
             boxShadow: {
-                card: "0 1px 3px 0 rgb(0 0 0 / 0.07), 0 1px 2px -1px rgb(0 0 0 / 0.07)",
+                card: "0 1px 2px 0 rgb(15 23 42 / 0.04), 0 6px 20px -6px rgb(15 23 42 / 0.08)",
                 "card-hover":
-                    "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
+                    "0 2px 4px 0 rgb(15 23 42 / 0.05), 0 12px 28px -8px rgb(15 23 42 / 0.14)",
+                // Panel melayang: sidebar & kartu hero (bayangan bernuansa dongker)
+                float: "0 2px 4px 0 rgb(15 23 42 / 0.06), 0 16px 40px -12px rgb(11 21 48 / 0.28)",
             },
             borderRadius: {
-                card: "0.75rem",
+                card: "1.25rem",
             },
         },
     },

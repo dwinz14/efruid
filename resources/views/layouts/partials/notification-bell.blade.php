@@ -29,7 +29,7 @@
         x-transition:leave="transition ease-in duration-100" x-transition:leave-start="opacity-100 translate-y-0"
         x-transition:leave-end="opacity-0 -translate-y-1" @click.outside="open = false" role="region"
         aria-label="Daftar notifikasi"
-        class="fixed inset-x-4 top-16 z-50 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 sm:w-96">
+        class="fixed inset-x-4 top-[4.5rem] z-50 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 sm:w-96">
 
         {{-- Header --}}
         <div class="flex items-center justify-between border-b border-slate-100 bg-slate-50 px-4 py-3">

@@ -16,7 +16,6 @@
                     </svg>
                 </a>
                 <div>
-                    <h2 class="text-xl font-bold text-slate-800 tracking-tight">Detail Permohonan</h2>
                     <p class="text-sm text-slate-500 mt-0.5 font-mono font-medium">
                         {{ $permohonan->nomor_dokumen ?? '— Menunggu Nomor (Draft) —' }}
                     </p>

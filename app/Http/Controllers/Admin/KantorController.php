@@ -10,10 +10,38 @@ use Illuminate\View\View;
 
 class KantorController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
-        $kantors = Kantor::withCount('users')->orderBy('nama')->paginate(15);
-        return view('admin.kantor.index', compact('kantors'));
+        $query = Kantor::withCount('users');
+
+        if ($request->filled('search')) {
+            $s = trim($request->search);
+            $query->where(function ($q) use ($s) {
+                $q->where('nama', 'like', "%{$s}%")
+                  ->orWhere('kode', 'like', "%{$s}%");
+            });
+        }
+
+        if ($request->filled('is_pusat')) {
+            $query->where('is_pusat', $request->boolean('is_pusat'));
+        }
+
+        if ($request->filled('is_active')) {
+            $query->where('is_active', $request->boolean('is_active'));
+        }
+
+        $kantors = $query->orderByDesc('is_pusat')->orderBy('nama')->paginate(15)->withQueryString();
+
+        $stats = [
+            'total'       => Kantor::count(),
+            'pusat'       => Kantor::where('is_pusat', true)->count(),
+            'cabang'      => Kantor::where('is_pusat', false)->count(),
+            'aktif'       => Kantor::where('is_active', true)->count(),
+            'nonaktif'    => Kantor::where('is_active', false)->count(),
+            'total_users' => (int) \App\Models\User::whereNotNull('kantor_id')->count(),
+        ];
+
+        return view('admin.kantor.index', compact('kantors', 'stats'));
     }
 
     public function store(Request $request): RedirectResponse

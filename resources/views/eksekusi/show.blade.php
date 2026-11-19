@@ -42,9 +42,6 @@
                             </span>
                         @endif
                     </div>
-                    <h2 class="text-lg sm:text-xl font-bold text-slate-800 tracking-tight mt-1 flex items-center gap-2">
-                        Eksekusi Permohonan FRUID
-                    </h2>
                 </div>
             </div>
 

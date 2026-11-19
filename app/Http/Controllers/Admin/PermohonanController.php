@@ -13,7 +13,7 @@ class PermohonanController extends Controller
 {
     public function index(Request $request): View
     {
-        $query = Permohonan::with(['pemohon', 'kantor'])->latest();
+        $query = Permohonan::with(['pemohon', 'kantor', 'executor'])->latest();
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -24,7 +24,7 @@ class PermohonanController extends Controller
         }
 
         if ($request->filled('search')) {
-            $s = $request->search;
+            $s = trim($request->search);
             $query->where(
                 fn($q) => $q
                     ->where('nomor_dokumen', 'like', "%{$s}%")
@@ -35,14 +35,28 @@ class PermohonanController extends Controller
 
         $permohonan = $query->paginate(15)->withQueryString();
         $statuses   = StatusPermohonan::cases();
-        $kantor    = Kantor::where('is_active', true)->orderBy('nama')->get();
+        $kantor     = Kantor::where('is_active', true)->orderBy('nama')->get();
 
-        return view('admin.permohonan.index', compact('permohonan', 'statuses', 'kantor'));
+        $countsByStatus = Permohonan::toBase()
+            ->selectRaw('status, count(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
+        $stats = [
+            'total'          => (int) $countsByStatus->sum(),
+            'pending_atasan' => (int) ($countsByStatus[StatusPermohonan::PENDING_ATASAN->value] ?? 0),
+            'pending_dirut'  => (int) ($countsByStatus[StatusPermohonan::PENDING_DIRUT->value] ?? 0),
+            'pending_it'     => (int) ($countsByStatus[StatusPermohonan::PENDING_IT->value] ?? 0),
+            'executed'       => (int) ($countsByStatus[StatusPermohonan::EXECUTED->value] ?? 0),
+            'rejected'       => (int) ($countsByStatus[StatusPermohonan::REJECTED->value] ?? 0),
+        ];
+
+        return view('admin.permohonan.index', compact('permohonan', 'statuses', 'kantor', 'stats'));
     }
 
     public function show(Permohonan $permohonan): View
     {
-        $permohonan->load('pemohon', 'kantor', 'atasan', 'approvalLogs.user');
+        $permohonan->load('pemohon', 'kantor', 'atasan', 'executor', 'approvalLogs.user');
         return view('admin.permohonan.show', compact('permohonan'));
     }
 }

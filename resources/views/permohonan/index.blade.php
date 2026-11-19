@@ -17,7 +17,6 @@
                     </svg>
                 </div>
                 <div>
-                    <h2 class="text-base font-bold text-slate-800">Daftar Permohonan</h2>
                     <p class="text-sm text-slate-500 mt-0.5">
                         Kelola dan pantau status permohonan yang telah Anda buat
                     </p>

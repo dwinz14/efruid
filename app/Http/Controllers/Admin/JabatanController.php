@@ -10,10 +10,36 @@ use Illuminate\View\View;
 
 class JabatanController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
-        $jabatans = Jabatan::withCount('users')->orderBy('urutan')->paginate(20);
-        return view('admin.jabatan.index', compact('jabatans'));
+        $query = Jabatan::withCount('users');
+
+        if ($request->filled('search')) {
+            $s = trim($request->search);
+            $query->where('nama', 'like', "%{$s}%");
+        }
+
+        if ($request->filled('level')) {
+            $query->where('level', (int) $request->level);
+        }
+
+        if ($request->filled('is_active')) {
+            $query->where('is_active', $request->boolean('is_active'));
+        }
+
+        $jabatans = $query->orderBy('level')->orderBy('urutan')->orderBy('nama')->paginate(20)->withQueryString();
+
+        $stats = [
+            'total'       => Jabatan::count(),
+            'direksi'     => Jabatan::whereIn('level', [Jabatan::LEVEL_DIRUT, Jabatan::LEVEL_DIREKTUR])->count(),
+            'kabag'       => Jabatan::where('level', Jabatan::LEVEL_KABAG)->count(),
+            'kasie'       => Jabatan::where('level', Jabatan::LEVEL_KASIE)->count(),
+            'staff'       => Jabatan::where('level', Jabatan::LEVEL_STAFF)->count(),
+            'aktif'       => Jabatan::where('is_active', true)->count(),
+            'total_users' => (int) \App\Models\User::whereNotNull('jabatan_id')->count(),
+        ];
+
+        return view('admin.jabatan.index', compact('jabatans', 'stats'));
     }
 
     public function store(Request $request): RedirectResponse
